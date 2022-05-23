@@ -1,4 +1,5 @@
 #include <iostream>
+#include <vector>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
@@ -9,6 +10,7 @@
 #include "shader.h"
 #include "camera.h"
 #include "block.h"
+#include "chunk.h"
 
 void processInput(GLFWwindow*);
 void mouseCallback(GLFWwindow*, double xpos, double ypos);
@@ -97,49 +99,62 @@ int main(int argc, char** argv) {
 	glGenVertexArrays(1, &VAO);
 	glBindVertexArray(VAO);
 
-	BlockMesh mesh = {
-		BlockVertex(-0.5f, -0.5f, -0.5f,  0.0, 0.0, 0.0, 0.0f, 0.0f),
-		BlockVertex(0.5f, -0.5f, -0.5f,  0.0, 0.0, 0.0, 1.0f, 0.0f),
-		BlockVertex(0.5f,  0.5f, -0.5f,  0.0, 0.0, 0.0, 1.0f, 1.0f),
-		BlockVertex(0.5f,  0.5f, -0.5f,  0.0, 0.0, 0.0, 1.0f, 1.0f),
-		BlockVertex(-0.5f,  0.5f, -0.5f,  0.0, 0.0, 0.0, 0.0f, 1.0f),
-		BlockVertex(-0.5f, -0.5f, -0.5f,  0.0, 0.0, 0.0, 0.0f, 0.0f),
+	//BlockVertex mesh[] = {
+		//BlockVertex(-0.5f, -0.5f, -0.5f,  0.0, 0.0, 0.0, 0.0f, 0.0f),
+		//BlockVertex(0.5f, -0.5f, -0.5f,  0.0, 0.0, 0.0, 1.0f, 0.0f),
+		//BlockVertex(0.5f,  0.5f, -0.5f,  0.0, 0.0, 0.0, 1.0f, 1.0f),
+		//BlockVertex(0.5f,  0.5f, -0.5f,  0.0, 0.0, 0.0, 1.0f, 1.0f),
+		//BlockVertex(-0.5f,  0.5f, -0.5f,  0.0, 0.0, 0.0, 0.0f, 1.0f),
+		//BlockVertex(-0.5f, -0.5f, -0.5f,  0.0, 0.0, 0.0, 0.0f, 0.0f),
+	//
+		//BlockVertex(-0.5f, -0.5f,  0.5f,  0.0, 0.0, 0.0, 0.0f, 0.0f),
+		//BlockVertex(0.5f, -0.5f,  0.5f,  0.0, 0.0, 0.0, 1.0f, 0.0f),
+		//BlockVertex(0.5f,  0.5f,  0.5f,  0.0, 0.0, 0.0, 1.0f, 1.0f),
+		//BlockVertex(0.5f,  0.5f,  0.5f,  0.0, 0.0, 0.0, 1.0f, 1.0f),
+		//BlockVertex(-0.5f,  0.5f,  0.5f,  0.0, 0.0, 0.0, 0.0f, 1.0f),
+		//BlockVertex(-0.5f, -0.5f,  0.5f,  0.0, 0.0, 0.0, 0.0f, 0.0f),
+	//
+		//BlockVertex(-0.5f,  0.5f,  0.5f,  0.0, 0.0, 0.0, 1.0f, 0.0f),
+		//BlockVertex(-0.5f,  0.5f, -0.5f,  0.0, 0.0, 0.0, 1.0f, 1.0f),
+		//BlockVertex(-0.5f, -0.5f, -0.5f,  0.0, 0.0, 0.0, 0.0f, 1.0f),
+		//BlockVertex(-0.5f, -0.5f, -0.5f,  0.0, 0.0, 0.0, 0.0f, 1.0f),
+		//BlockVertex(-0.5f, -0.5f,  0.5f,  0.0, 0.0, 0.0, 0.0f, 0.0f),
+		//BlockVertex(-0.5f,  0.5f,  0.5f,  0.0, 0.0, 0.0, 1.0f, 0.0f),
+	//
+		//BlockVertex(0.5f,  0.5f,  0.5f,  0.0, 0.0, 0.0, 1.0f, 0.0f),
+		//BlockVertex(0.5f,  0.5f, -0.5f,  0.0, 0.0, 0.0, 1.0f, 1.0f),
+		//BlockVertex(0.5f, -0.5f, -0.5f,  0.0, 0.0, 0.0, 0.0f, 1.0f),
+		//BlockVertex(0.5f, -0.5f, -0.5f,  0.0, 0.0, 0.0, 0.0f, 1.0f),
+		//BlockVertex(0.5f, -0.5f,  0.5f,  0.0, 0.0, 0.0, 0.0f, 0.0f),
+		//BlockVertex(0.5f,  0.5f,  0.5f,  0.0, 0.0, 0.0, 1.0f, 0.0f),
+	//
+		//BlockVertex(-0.5f, -0.5f, -0.5f,  0.0, 0.0, 0.0, 0.0f, 1.0f),
+		//BlockVertex(0.5f, -0.5f, -0.5f,  0.0, 0.0, 0.0, 1.0f, 1.0f),
+		//BlockVertex(0.5f, -0.5f,  0.5f,  0.0, 0.0, 0.0, 1.0f, 0.0f),
+		//BlockVertex(0.5f, -0.5f,  0.5f,  0.0, 0.0, 0.0, 1.0f, 0.0f),
+		//BlockVertex(-0.5f, -0.5f,  0.5f,  0.0, 0.0, 0.0, 0.0f, 0.0f),
+		//BlockVertex(-0.5f, -0.5f, -0.5f,  0.0, 0.0, 0.0, 0.0f, 1.0f),
+	//
+		//BlockVertex(-0.5f,  0.5f, -0.5f,  0.0, 0.0, 0.0, 0.0f, 1.0f),
+		//BlockVertex(0.5f,  0.5f, -0.5f,  0.0, 0.0, 0.0, 1.0f, 1.0f),
+		//BlockVertex(0.5f,  0.5f,  0.5f,  0.0, 0.0, 0.0, 1.0f, 0.0f),
+		//BlockVertex(0.5f,  0.5f,  0.5f,  0.0, 0.0, 0.0, 1.0f, 0.0f),
+		//BlockVertex(-0.5f,  0.5f,  0.5f,  0.0, 0.0, 0.0, 0.0f, 0.0f),
+		//BlockVertex(-0.5f,  0.5f, -0.5f,  0.0, 0.0, 0.0, 0.0f, 1.0f)
+	//};
+	Chunk chunk(glm::vec3(0.0f, 0.0f, 0.0f), nullptr);
+	//std::vector<BlockVertex> meshVector = chunk.getMeshUnoptimized();
+	std::vector<BlockVertex> meshVector;
+	chunk.getSideMesh(Direction::NEGX, meshVector);
+	chunk.getSideMesh(Direction::POSX, meshVector);
+	chunk.getSideMesh(Direction::NEGY, meshVector);
+	chunk.getSideMesh(Direction::POSY, meshVector);
+	chunk.getSideMesh(Direction::NEGZ, meshVector);
+	chunk.getSideMesh(Direction::POSZ, meshVector);
+	chunk.getInteriorMesh(meshVector);
+	int meshLen = meshVector.size();
+	BlockVertex* mesh = meshVector.data();
 	
-		BlockVertex(-0.5f, -0.5f,  0.5f,  0.0, 0.0, 0.0, 0.0f, 0.0f),
-		BlockVertex(0.5f, -0.5f,  0.5f,  0.0, 0.0, 0.0, 1.0f, 0.0f),
-		BlockVertex(0.5f,  0.5f,  0.5f,  0.0, 0.0, 0.0, 1.0f, 1.0f),
-		BlockVertex(0.5f,  0.5f,  0.5f,  0.0, 0.0, 0.0, 1.0f, 1.0f),
-		BlockVertex(-0.5f,  0.5f,  0.5f,  0.0, 0.0, 0.0, 0.0f, 1.0f),
-		BlockVertex(-0.5f, -0.5f,  0.5f,  0.0, 0.0, 0.0, 0.0f, 0.0f),
-	
-		BlockVertex(-0.5f,  0.5f,  0.5f,  0.0, 0.0, 0.0, 1.0f, 0.0f),
-		BlockVertex(-0.5f,  0.5f, -0.5f,  0.0, 0.0, 0.0, 1.0f, 1.0f),
-		BlockVertex(-0.5f, -0.5f, -0.5f,  0.0, 0.0, 0.0, 0.0f, 1.0f),
-		BlockVertex(-0.5f, -0.5f, -0.5f,  0.0, 0.0, 0.0, 0.0f, 1.0f),
-		BlockVertex(-0.5f, -0.5f,  0.5f,  0.0, 0.0, 0.0, 0.0f, 0.0f),
-		BlockVertex(-0.5f,  0.5f,  0.5f,  0.0, 0.0, 0.0, 1.0f, 0.0f),
-	
-		BlockVertex(0.5f,  0.5f,  0.5f,  0.0, 0.0, 0.0, 1.0f, 0.0f),
-		BlockVertex(0.5f,  0.5f, -0.5f,  0.0, 0.0, 0.0, 1.0f, 1.0f),
-		BlockVertex(0.5f, -0.5f, -0.5f,  0.0, 0.0, 0.0, 0.0f, 1.0f),
-		BlockVertex(0.5f, -0.5f, -0.5f,  0.0, 0.0, 0.0, 0.0f, 1.0f),
-		BlockVertex(0.5f, -0.5f,  0.5f,  0.0, 0.0, 0.0, 0.0f, 0.0f),
-		BlockVertex(0.5f,  0.5f,  0.5f,  0.0, 0.0, 0.0, 1.0f, 0.0f),
-	
-		BlockVertex(-0.5f, -0.5f, -0.5f,  0.0, 0.0, 0.0, 0.0f, 1.0f),
-		BlockVertex(0.5f, -0.5f, -0.5f,  0.0, 0.0, 0.0, 1.0f, 1.0f),
-		BlockVertex(0.5f, -0.5f,  0.5f,  0.0, 0.0, 0.0, 1.0f, 0.0f),
-		BlockVertex(0.5f, -0.5f,  0.5f,  0.0, 0.0, 0.0, 1.0f, 0.0f),
-		BlockVertex(-0.5f, -0.5f,  0.5f,  0.0, 0.0, 0.0, 0.0f, 0.0f),
-		BlockVertex(-0.5f, -0.5f, -0.5f,  0.0, 0.0, 0.0, 0.0f, 1.0f),
-	
-		BlockVertex(-0.5f,  0.5f, -0.5f,  0.0, 0.0, 0.0, 0.0f, 1.0f),
-		BlockVertex(0.5f,  0.5f, -0.5f,  0.0, 0.0, 0.0, 1.0f, 1.0f),
-		BlockVertex(0.5f,  0.5f,  0.5f,  0.0, 0.0, 0.0, 1.0f, 0.0f),
-		BlockVertex(0.5f,  0.5f,  0.5f,  0.0, 0.0, 0.0, 1.0f, 0.0f),
-		BlockVertex(-0.5f,  0.5f,  0.5f,  0.0, 0.0, 0.0, 0.0f, 0.0f),
-		BlockVertex(-0.5f,  0.5f, -0.5f,  0.0, 0.0, 0.0, 0.0f, 1.0f)
-	};
 
 	//float vertices[] = {
 		//-0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
@@ -199,7 +214,7 @@ int main(int argc, char** argv) {
 	unsigned int VBO;
 	glGenBuffers(1, &VBO);
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(mesh), mesh, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, meshLen * sizeof(BlockVertex), mesh, GL_STATIC_DRAW);
 
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(BlockVertex), (void*) 0);
 	glEnableVertexAttribArray(0);
@@ -211,6 +226,7 @@ int main(int argc, char** argv) {
 	glEnableVertexAttribArray(2);
 
 
+	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	while (!glfwWindowShouldClose(window)) {
 		processInput(window);
 
@@ -219,9 +235,9 @@ int main(int argc, char** argv) {
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		shader.use();
+		//glActiveTexture(GL_TEXTURE0);
+		//glBindTexture(GL_TEXTURE_2D, texture);
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, texture);
-		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, texture2);
 		glBindVertexArray(VAO);
 
@@ -247,7 +263,7 @@ int main(int argc, char** argv) {
 
 		glm::mat4 model = glm::mat4(1.0f);
 		shader.setMat4("model", model);
-		glDrawArrays(GL_TRIANGLES, 0, sizeof(mesh) / sizeof(BlockVertex));
+		glDrawArrays(GL_TRIANGLES, 0, meshLen);
 		
 		glBindVertexArray(0);
 

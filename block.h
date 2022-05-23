@@ -30,7 +30,7 @@ public:
 	}
 };
 
-typedef BlockVertex BlockMesh[];
+typedef BlockVertex *BlockMesh;
 
 enum class BlockType {
 	AIR,
@@ -39,6 +39,13 @@ enum class BlockType {
 
 class Block {
 public:
+	BlockType type;
+	int variant;
+
+	Block() {
+		this->type = BlockType::AIR;
+		this->variant = 0;
+	}
 	Block(BlockType type, int variant) {
 		this->type = type;
 		this->variant = variant;
@@ -55,10 +62,6 @@ public:
 				return true;
 		}
 	}
-
-private:
-	BlockType type;
-	int variant;
 };
 
 #endif
