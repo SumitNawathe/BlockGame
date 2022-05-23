@@ -8,6 +8,7 @@
 
 #include "shader.h"
 #include "camera.h"
+#include "block.h"
 
 void processInput(GLFWwindow*);
 void mouseCallback(GLFWwindow*, double xpos, double ypos);
@@ -87,8 +88,8 @@ int main(int argc, char** argv) {
 	stbi_image_free(data);
 
 	shader.use();
-	glUniform1i(glGetUniformLocation(shader.ID, "texture1"), 0);
-	shader.setInt("texture2", 1);
+	glUniform1i(glGetUniformLocation(shader.ID, "primaryTexture"), 0);
+	//shader.setInt("texture2", 1);
 
 
 
@@ -96,72 +97,118 @@ int main(int argc, char** argv) {
 	glGenVertexArrays(1, &VAO);
 	glBindVertexArray(VAO);
 
-	float vertices[] = {
-		-0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
-		0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
-		0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-		0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-		-0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
-		-0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+	BlockMesh mesh = {
+		BlockVertex(-0.5f, -0.5f, -0.5f,  0.0, 0.0, 0.0, 0.0f, 0.0f),
+		BlockVertex(0.5f, -0.5f, -0.5f,  0.0, 0.0, 0.0, 1.0f, 0.0f),
+		BlockVertex(0.5f,  0.5f, -0.5f,  0.0, 0.0, 0.0, 1.0f, 1.0f),
+		BlockVertex(0.5f,  0.5f, -0.5f,  0.0, 0.0, 0.0, 1.0f, 1.0f),
+		BlockVertex(-0.5f,  0.5f, -0.5f,  0.0, 0.0, 0.0, 0.0f, 1.0f),
+		BlockVertex(-0.5f, -0.5f, -0.5f,  0.0, 0.0, 0.0, 0.0f, 0.0f),
 	
-		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-		0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-		0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
-		0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
-		-0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
-		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+		BlockVertex(-0.5f, -0.5f,  0.5f,  0.0, 0.0, 0.0, 0.0f, 0.0f),
+		BlockVertex(0.5f, -0.5f,  0.5f,  0.0, 0.0, 0.0, 1.0f, 0.0f),
+		BlockVertex(0.5f,  0.5f,  0.5f,  0.0, 0.0, 0.0, 1.0f, 1.0f),
+		BlockVertex(0.5f,  0.5f,  0.5f,  0.0, 0.0, 0.0, 1.0f, 1.0f),
+		BlockVertex(-0.5f,  0.5f,  0.5f,  0.0, 0.0, 0.0, 0.0f, 1.0f),
+		BlockVertex(-0.5f, -0.5f,  0.5f,  0.0, 0.0, 0.0, 0.0f, 0.0f),
 	
-		-0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-		-0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-		-0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+		BlockVertex(-0.5f,  0.5f,  0.5f,  0.0, 0.0, 0.0, 1.0f, 0.0f),
+		BlockVertex(-0.5f,  0.5f, -0.5f,  0.0, 0.0, 0.0, 1.0f, 1.0f),
+		BlockVertex(-0.5f, -0.5f, -0.5f,  0.0, 0.0, 0.0, 0.0f, 1.0f),
+		BlockVertex(-0.5f, -0.5f, -0.5f,  0.0, 0.0, 0.0, 0.0f, 1.0f),
+		BlockVertex(-0.5f, -0.5f,  0.5f,  0.0, 0.0, 0.0, 0.0f, 0.0f),
+		BlockVertex(-0.5f,  0.5f,  0.5f,  0.0, 0.0, 0.0, 1.0f, 0.0f),
 	
-		0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-		0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-		0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-		0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-		0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-		0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+		BlockVertex(0.5f,  0.5f,  0.5f,  0.0, 0.0, 0.0, 1.0f, 0.0f),
+		BlockVertex(0.5f,  0.5f, -0.5f,  0.0, 0.0, 0.0, 1.0f, 1.0f),
+		BlockVertex(0.5f, -0.5f, -0.5f,  0.0, 0.0, 0.0, 0.0f, 1.0f),
+		BlockVertex(0.5f, -0.5f, -0.5f,  0.0, 0.0, 0.0, 0.0f, 1.0f),
+		BlockVertex(0.5f, -0.5f,  0.5f,  0.0, 0.0, 0.0, 0.0f, 0.0f),
+		BlockVertex(0.5f,  0.5f,  0.5f,  0.0, 0.0, 0.0, 1.0f, 0.0f),
 	
-		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-		0.5f, -0.5f, -0.5f,  1.0f, 1.0f,
-		0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-		0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+		BlockVertex(-0.5f, -0.5f, -0.5f,  0.0, 0.0, 0.0, 0.0f, 1.0f),
+		BlockVertex(0.5f, -0.5f, -0.5f,  0.0, 0.0, 0.0, 1.0f, 1.0f),
+		BlockVertex(0.5f, -0.5f,  0.5f,  0.0, 0.0, 0.0, 1.0f, 0.0f),
+		BlockVertex(0.5f, -0.5f,  0.5f,  0.0, 0.0, 0.0, 1.0f, 0.0f),
+		BlockVertex(-0.5f, -0.5f,  0.5f,  0.0, 0.0, 0.0, 0.0f, 0.0f),
+		BlockVertex(-0.5f, -0.5f, -0.5f,  0.0, 0.0, 0.0, 0.0f, 1.0f),
 	
-		-0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
-		0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-		0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-		0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-		-0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
-		-0.5f,  0.5f, -0.5f,  0.0f, 1.0f
+		BlockVertex(-0.5f,  0.5f, -0.5f,  0.0, 0.0, 0.0, 0.0f, 1.0f),
+		BlockVertex(0.5f,  0.5f, -0.5f,  0.0, 0.0, 0.0, 1.0f, 1.0f),
+		BlockVertex(0.5f,  0.5f,  0.5f,  0.0, 0.0, 0.0, 1.0f, 0.0f),
+		BlockVertex(0.5f,  0.5f,  0.5f,  0.0, 0.0, 0.0, 1.0f, 0.0f),
+		BlockVertex(-0.5f,  0.5f,  0.5f,  0.0, 0.0, 0.0, 0.0f, 0.0f),
+		BlockVertex(-0.5f,  0.5f, -0.5f,  0.0, 0.0, 0.0, 0.0f, 1.0f)
 	};
-	glm::vec3 cubePositions[] = {
-		glm::vec3( 0.0f,  0.0f,  0.0f), 
-		glm::vec3( 2.0f,  5.0f, -15.0f), 
-		glm::vec3(-1.5f, -2.2f, -2.5f),  
-		glm::vec3(-3.8f, -2.0f, -12.3f),  
-		glm::vec3( 2.4f, -0.4f, -3.5f),  
-		glm::vec3(-1.7f,  3.0f, -7.5f),  
-		glm::vec3( 1.3f, -2.0f, -2.5f),  
-		glm::vec3( 1.5f,  2.0f, -2.5f), 
-		glm::vec3( 1.5f,  0.2f, -1.5f), 
-		glm::vec3(-1.3f,  1.0f, -1.5f)  
-	};
+
+	//float vertices[] = {
+		//-0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+		//0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
+		//0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+		//0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+		//-0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+		//-0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+	//
+		//-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+		//0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+		//0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+		//0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+		//-0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
+		//-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+	//
+		//-0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+		//-0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+		//-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+		//-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+		//-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+		//-0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+	//
+		//0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+		//0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+		//0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+		//0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+		//0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+		//0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+	//
+		//-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+		//0.5f, -0.5f, -0.5f,  1.0f, 1.0f,
+		//0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+		//0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+		//-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+		//-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+	//
+		//-0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+		//0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+		//0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+		//0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+		//-0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
+		//-0.5f,  0.5f, -0.5f,  0.0f, 1.0f
+	//};
+	//glm::vec3 cubePositions[] = {
+		//glm::vec3( 0.0f,  0.0f,  0.0f), 
+		//glm::vec3( 2.0f,  5.0f, -15.0f), 
+		//glm::vec3(-1.5f, -2.2f, -2.5f),  
+		//glm::vec3(-3.8f, -2.0f, -12.3f),  
+		//glm::vec3( 2.4f, -0.4f, -3.5f),  
+		//glm::vec3(-1.7f,  3.0f, -7.5f),  
+		//glm::vec3( 1.3f, -2.0f, -2.5f),  
+		//glm::vec3( 1.5f,  2.0f, -2.5f), 
+		//glm::vec3( 1.5f,  0.2f, -1.5f), 
+		//glm::vec3(-1.3f,  1.0f, -1.5f)  
+	//};
 	unsigned int VBO;
 	glGenBuffers(1, &VBO);
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(mesh), mesh, GL_STATIC_DRAW);
 
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*) 0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(BlockVertex), (void*) 0);
 	glEnableVertexAttribArray(0);
 
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*) (3 * sizeof(float)));
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(BlockVertex), (void*) offsetof(BlockVertex, normal));
 	glEnableVertexAttribArray(1);
 
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(BlockVertex), (void*)offsetof(BlockVertex, texCoords));
+	glEnableVertexAttribArray(2);
 
 
 	while (!glfwWindowShouldClose(window)) {
@@ -188,15 +235,19 @@ int main(int argc, char** argv) {
 		glm::mat4 view = camera.getViewMatrix();
 		shader.setMat4("view", view);
 
-		for (unsigned int i = 0; i < 10; i++) {
-			glm::mat4 model = glm::mat4(1.0f);
-			model = glm::translate(model, cubePositions[i]);
-			float angle = 20.0f * i;
-			model = glm::rotate(model, (float)glfwGetTime() * glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
-			shader.setMat4("model", model);
-			
-			glDrawArrays(GL_TRIANGLES, 0, 36);
-		}
+		//for (unsigned int i = 0; i < 10; i++) {
+			//glm::mat4 model = glm::mat4(1.0f);
+			//model = glm::translate(model, cubePositions[i]);
+			//float angle = 20.0f * i;
+			//model = glm::rotate(model, (float)glfwGetTime() * glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
+			//shader.setMat4("model", model);
+			//
+			//glDrawArrays(GL_TRIANGLES, 0, 36);
+		//}
+
+		glm::mat4 model = glm::mat4(1.0f);
+		shader.setMat4("model", model);
+		glDrawArrays(GL_TRIANGLES, 0, sizeof(mesh) / sizeof(BlockVertex));
 		
 		glBindVertexArray(0);
 
