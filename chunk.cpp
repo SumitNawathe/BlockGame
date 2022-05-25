@@ -1,6 +1,8 @@
 #include "chunk.h"
 
 #include <vector>
+#include <iostream>
+#include "texturemanager.h"
 
 /*
 * Constructor for chunk
@@ -32,54 +34,56 @@ void Chunk::getBlockFace(Direction dir, unsigned int i, unsigned int j, unsigned
 	if (i >= CHUNK_SIZE || j >= CHUNK_SIZE || k >= CHUNK_SIZE)
 		return;
 
+	TextureManager::TextureResult uvCoords = TextureManager::getInstance().getUVCoords(blocks[i][j][k].getType(), dir);
+
 	switch (dir) {
 		case Direction::NEGX:
-			output.push_back(BlockVertex(offset + glm::vec3(-0.5f,  0.5f,  0.5f),  glm::vec3(0.0, 0.0, 0.0), glm::vec2(1.0f, 0.0f)));
-			output.push_back(BlockVertex(offset + glm::vec3(-0.5f,  0.5f, -0.5f),  glm::vec3(0.0, 0.0, 0.0), glm::vec2(1.0f, 1.0f)));
-			output.push_back(BlockVertex(offset + glm::vec3(-0.5f, -0.5f, -0.5f),  glm::vec3(0.0, 0.0, 0.0), glm::vec2(0.0f, 1.0f)));
-			output.push_back(BlockVertex(offset + glm::vec3(-0.5f, -0.5f, -0.5f),  glm::vec3(0.0, 0.0, 0.0), glm::vec2(0.0f, 1.0f)));
-			output.push_back(BlockVertex(offset + glm::vec3(-0.5f, -0.5f,  0.5f),  glm::vec3(0.0, 0.0, 0.0), glm::vec2(0.0f, 0.0f)));
-			output.push_back(BlockVertex(offset + glm::vec3(-0.5f,  0.5f,  0.5f),  glm::vec3(0.0, 0.0, 0.0), glm::vec2(1.0f, 0.0f)));
+			output.push_back(BlockVertex(offset + glm::vec3(-0.5f,  0.5f,  0.5f),  glm::vec3(0.0, 0.0, 0.0), uvCoords[1])); // top right
+			output.push_back(BlockVertex(offset + glm::vec3(-0.5f,  0.5f, -0.5f),  glm::vec3(0.0, 0.0, 0.0), uvCoords[0])); // top left
+			output.push_back(BlockVertex(offset + glm::vec3(-0.5f, -0.5f, -0.5f),  glm::vec3(0.0, 0.0, 0.0), uvCoords[2])); // bottom left
+			output.push_back(BlockVertex(offset + glm::vec3(-0.5f, -0.5f, -0.5f),  glm::vec3(0.0, 0.0, 0.0), uvCoords[2])); // bottom left
+			output.push_back(BlockVertex(offset + glm::vec3(-0.5f, -0.5f,  0.5f),  glm::vec3(0.0, 0.0, 0.0), uvCoords[3])); // bottom right
+			output.push_back(BlockVertex(offset + glm::vec3(-0.5f,  0.5f,  0.5f),  glm::vec3(0.0, 0.0, 0.0), uvCoords[1])); // top right
 			break;
 		case Direction::POSX:
-			output.push_back(BlockVertex(offset + glm::vec3(0.5f,  0.5f,  0.5f),  glm::vec3(0.0, 0.0, 0.0), glm::vec2(1.0f, 0.0f)));
-			output.push_back(BlockVertex(offset + glm::vec3(0.5f,  0.5f, -0.5f),  glm::vec3(0.0, 0.0, 0.0), glm::vec2(1.0f, 1.0f)));
-			output.push_back(BlockVertex(offset + glm::vec3(0.5f, -0.5f, -0.5f),  glm::vec3(0.0, 0.0, 0.0), glm::vec2(0.0f, 1.0f)));
-			output.push_back(BlockVertex(offset + glm::vec3(0.5f, -0.5f, -0.5f),  glm::vec3(0.0, 0.0, 0.0), glm::vec2(0.0f, 1.0f)));
-			output.push_back(BlockVertex(offset + glm::vec3(0.5f, -0.5f,  0.5f),  glm::vec3(0.0, 0.0, 0.0), glm::vec2(0.0f, 0.0f)));
-			output.push_back(BlockVertex(offset + glm::vec3(0.5f,  0.5f,  0.5f),  glm::vec3(0.0, 0.0, 0.0), glm::vec2(1.0f, 0.0f)));
+			output.push_back(BlockVertex(offset + glm::vec3(0.5f,  0.5f,  0.5f),  glm::vec3(0.0, 0.0, 0.0), uvCoords[0])); // top left
+			output.push_back(BlockVertex(offset + glm::vec3(0.5f,  0.5f, -0.5f),  glm::vec3(0.0, 0.0, 0.0), uvCoords[1])); // top right
+			output.push_back(BlockVertex(offset + glm::vec3(0.5f, -0.5f, -0.5f),  glm::vec3(0.0, 0.0, 0.0), uvCoords[3])); // bottom right
+			output.push_back(BlockVertex(offset + glm::vec3(0.5f, -0.5f, -0.5f),  glm::vec3(0.0, 0.0, 0.0), uvCoords[3])); // bottom right
+			output.push_back(BlockVertex(offset + glm::vec3(0.5f, -0.5f,  0.5f),  glm::vec3(0.0, 0.0, 0.0), uvCoords[2])); // bottom left
+			output.push_back(BlockVertex(offset + glm::vec3(0.5f,  0.5f,  0.5f),  glm::vec3(0.0, 0.0, 0.0), uvCoords[0])); // top left
 			break;
 		case Direction::NEGY:
-			output.push_back(BlockVertex(offset + glm::vec3(-0.5f, -0.5f, -0.5f), glm::vec3(0.0, 0.0, 0.0), glm::vec2(0.0f, 1.0f)));
-			output.push_back(BlockVertex(offset + glm::vec3(0.5f, -0.5f, -0.5f), glm::vec3(0.0, 0.0, 0.0), glm::vec2(1.0f, 1.0f)));
-			output.push_back(BlockVertex(offset + glm::vec3(0.5f, -0.5f, 0.5f), glm::vec3(0.0, 0.0, 0.0), glm::vec2(1.0f, 0.0f)));
-			output.push_back(BlockVertex(offset + glm::vec3(0.5f, -0.5f, 0.5f), glm::vec3(0.0, 0.0, 0.0), glm::vec2(1.0f, 0.0f)));
-			output.push_back(BlockVertex(offset + glm::vec3(-0.5f, -0.5f, 0.5f), glm::vec3(0.0, 0.0, 0.0), glm::vec2(0.0f, 0.0f)));
-			output.push_back(BlockVertex(offset + glm::vec3(-0.5f, -0.5f, -0.5f), glm::vec3(0.0, 0.0, 0.0), glm::vec2(0.0f, 1.0f)));
+			output.push_back(BlockVertex(offset + glm::vec3(-0.5f, -0.5f, -0.5f), glm::vec3(0.0, 0.0, 0.0), uvCoords[2])); // bottom left
+			output.push_back(BlockVertex(offset + glm::vec3( 0.5f, -0.5f, -0.5f), glm::vec3(0.0, 0.0, 0.0), uvCoords[3])); // bottom right
+			output.push_back(BlockVertex(offset + glm::vec3( 0.5f, -0.5f,  0.5f), glm::vec3(0.0, 0.0, 0.0), uvCoords[1])); // top right
+			output.push_back(BlockVertex(offset + glm::vec3( 0.5f, -0.5f,  0.5f), glm::vec3(0.0, 0.0, 0.0), uvCoords[1])); // top right
+			output.push_back(BlockVertex(offset + glm::vec3(-0.5f, -0.5f,  0.5f), glm::vec3(0.0, 0.0, 0.0), uvCoords[0])); // top left
+			output.push_back(BlockVertex(offset + glm::vec3(-0.5f, -0.5f, -0.5f), glm::vec3(0.0, 0.0, 0.0), uvCoords[2])); // bottom left
 			break;
 		case Direction::POSY:
-			output.push_back(BlockVertex(offset + glm::vec3(-0.5f,  0.5f, -0.5f),  glm::vec3(0.0, 0.0, 0.0), glm::vec2(0.0f, 1.0f)));
-			output.push_back(BlockVertex(offset + glm::vec3(0.5f,  0.5f, -0.5f),  glm::vec3(0.0, 0.0, 0.0), glm::vec2(1.0f, 1.0f)));
-			output.push_back(BlockVertex(offset + glm::vec3(0.5f,  0.5f,  0.5f),  glm::vec3(0.0, 0.0, 0.0), glm::vec2(1.0f, 0.0f)));
-			output.push_back(BlockVertex(offset + glm::vec3(0.5f,  0.5f,  0.5f),  glm::vec3(0.0, 0.0, 0.0), glm::vec2(1.0f, 0.0f)));
-			output.push_back(BlockVertex(offset + glm::vec3(-0.5f,  0.5f,  0.5f),  glm::vec3(0.0, 0.0, 0.0), glm::vec2(0.0f, 0.0f)));
-			output.push_back(BlockVertex(offset + glm::vec3(-0.5f, 0.5f, -0.5f), glm::vec3(0.0, 0.0, 0.0), glm::vec2(0.0f, 1.0f)));
+			output.push_back(BlockVertex(offset + glm::vec3(-0.5f, 0.5f, -0.5f), glm::vec3(0.0, 0.0, 0.0), uvCoords[0])); // top left
+			output.push_back(BlockVertex(offset + glm::vec3( 0.5f, 0.5f, -0.5f), glm::vec3(0.0, 0.0, 0.0), uvCoords[1])); // top right
+			output.push_back(BlockVertex(offset + glm::vec3( 0.5f, 0.5f,  0.5f), glm::vec3(0.0, 0.0, 0.0), uvCoords[3])); // bottom right
+			output.push_back(BlockVertex(offset + glm::vec3( 0.5f, 0.5f,  0.5f), glm::vec3(0.0, 0.0, 0.0), uvCoords[3])); // bottom right
+			output.push_back(BlockVertex(offset + glm::vec3(-0.5f, 0.5f,  0.5f), glm::vec3(0.0, 0.0, 0.0), uvCoords[2])); // bottom left
+			output.push_back(BlockVertex(offset + glm::vec3(-0.5f, 0.5f, -0.5f), glm::vec3(0.0, 0.0, 0.0), uvCoords[0])); // top left
 			break;
 		case Direction::NEGZ:
-			output.push_back(BlockVertex(offset + glm::vec3(-0.5f, -0.5f, -0.5f), glm::vec3(0.0, 0.0, 0.0), glm::vec2(0.0f, 0.0f)));
-			output.push_back(BlockVertex(offset + glm::vec3(0.5f, -0.5f, -0.5f),  glm::vec3(0.0, 0.0, 0.0), glm::vec2(1.0f, 0.0f)));
-			output.push_back(BlockVertex(offset + glm::vec3(0.5f,  0.5f, -0.5f),  glm::vec3(0.0, 0.0, 0.0), glm::vec2(1.0f, 1.0f)));
-			output.push_back(BlockVertex(offset + glm::vec3(0.5f,  0.5f, -0.5f),  glm::vec3(0.0, 0.0, 0.0), glm::vec2(1.0f, 1.0f)));
-			output.push_back(BlockVertex(offset + glm::vec3(-0.5f,  0.5f, -0.5f),  glm::vec3(0.0, 0.0, 0.0), glm::vec2(0.0f, 1.0f)));
-			output.push_back(BlockVertex(offset + glm::vec3(-0.5f, -0.5f, -0.5f),  glm::vec3(0.0, 0.0, 0.0), glm::vec2(0.0f, 0.0f)));
+			output.push_back(BlockVertex(offset + glm::vec3(-0.5f, -0.5f, -0.5f), glm::vec3(0.0, 0.0, 0.0), uvCoords[3])); // bottom right
+			output.push_back(BlockVertex(offset + glm::vec3( 0.5f, -0.5f, -0.5f), glm::vec3(0.0, 0.0, 0.0), uvCoords[2])); // bottom left
+			output.push_back(BlockVertex(offset + glm::vec3( 0.5f,  0.5f, -0.5f), glm::vec3(0.0, 0.0, 0.0), uvCoords[0])); // top left
+			output.push_back(BlockVertex(offset + glm::vec3( 0.5f,  0.5f, -0.5f), glm::vec3(0.0, 0.0, 0.0), uvCoords[0])); // top left
+			output.push_back(BlockVertex(offset + glm::vec3(-0.5f,  0.5f, -0.5f), glm::vec3(0.0, 0.0, 0.0), uvCoords[1])); // top right
+			output.push_back(BlockVertex(offset + glm::vec3(-0.5f, -0.5f, -0.5f), glm::vec3(0.0, 0.0, 0.0), uvCoords[3])); // bottom right
 			break;
 		case Direction::POSZ:
-			output.push_back(BlockVertex(offset + glm::vec3(-0.5f, -0.5f, 0.5f), glm::vec3(0.0, 0.0, 0.0), glm::vec2(0.0f, 0.0f)));
-			output.push_back(BlockVertex(offset + glm::vec3(0.5f, -0.5f, 0.5f),  glm::vec3(0.0, 0.0, 0.0), glm::vec2(1.0f, 0.0f)));
-			output.push_back(BlockVertex(offset + glm::vec3(0.5f,  0.5f, 0.5f),  glm::vec3(0.0, 0.0, 0.0), glm::vec2(1.0f, 1.0f)));
-			output.push_back(BlockVertex(offset + glm::vec3(0.5f,  0.5f, 0.5f),  glm::vec3(0.0, 0.0, 0.0), glm::vec2(1.0f, 1.0f)));
-			output.push_back(BlockVertex(offset + glm::vec3(-0.5f,  0.5f, 0.5f),  glm::vec3(0.0, 0.0, 0.0), glm::vec2(0.0f, 1.0f)));
-			output.push_back(BlockVertex(offset + glm::vec3(-0.5f, -0.5f, 0.5f),  glm::vec3(0.0, 0.0, 0.0), glm::vec2(0.0f, 0.0f)));
+			output.push_back(BlockVertex(offset + glm::vec3(-0.5f, -0.5f, 0.5f), glm::vec3(0.0, 0.0, 0.0), uvCoords[2])); // bottom left
+			output.push_back(BlockVertex(offset + glm::vec3( 0.5f, -0.5f, 0.5f), glm::vec3(0.0, 0.0, 0.0), uvCoords[3])); // bottom right
+			output.push_back(BlockVertex(offset + glm::vec3( 0.5f,  0.5f, 0.5f), glm::vec3(0.0, 0.0, 0.0), uvCoords[1])); // top right
+			output.push_back(BlockVertex(offset + glm::vec3( 0.5f,  0.5f, 0.5f), glm::vec3(0.0, 0.0, 0.0), uvCoords[1])); // top right
+			output.push_back(BlockVertex(offset + glm::vec3(-0.5f,  0.5f, 0.5f), glm::vec3(0.0, 0.0, 0.0), uvCoords[0])); // top left
+			output.push_back(BlockVertex(offset + glm::vec3(-0.5f, -0.5f, 0.5f), glm::vec3(0.0, 0.0, 0.0), uvCoords[2])); // bottom left
 			break;
 	}
 }
@@ -95,7 +99,7 @@ std::vector<BlockVertex> Chunk::getBlockFace(Direction dir, unsigned int i, unsi
 
 /*
 * generates the mesh on a specific side of the chunk,
-* returns an alloc'd pointer
+* returns in order of: i then j then k, as appropriate, increasing from 0 to CHUNK_SIZE
 * @param direction: which of 6 directions the mesh should be for
 * @param output: vector to which faces are added
 */
