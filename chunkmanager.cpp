@@ -57,9 +57,45 @@ void ChunkManager::draw() {
 }
 
 
-/* TODO */
-void ChunkManager::updatePlayerPos(glm::vec3 playerPos) {
+/* rounds float always downwards; ex: +2.4 => +2, -2.4 => -3 */
+int roundFloatDown(float input) {
+	if (input < 0.0f)
+		return static_cast<int>(input - 1.0f);
+	else
+		return static_cast<int>(input);
+}
 
+
+/*
+* loads/unloads chunks in response to player movement
+* @param playerPos: updated player position;
+*/
+void ChunkManager::updatePlayerPos(glm::vec3 playerPos) {
+	// check if player has moved
+	int newX = roundFloatDown(playerPos.x / (float)CHUNK_SIZE);
+	int newY = roundFloatDown(playerPos.y / (float)CHUNK_SIZE);
+	int newZ = roundFloatDown(playerPos.z / (float)CHUNK_SIZE);
+	if (std::make_tuple(newX, newY, newZ) == lastPlayerChunkPos) return;
+	std::cout << "player has moved chunks" << std::endl;
+	lastPlayerChunkPos = std::make_tuple(newX, newY, newZ);
+
+	// add new chunks within radius
+	for (int i = newX - loadedRadius; i <= newX + loadedRadius; i++)
+		for (int j = newY - loadedRadius; j <= newY + loadedRadius; j++)
+			for (int k = newZ - loadedRadius; k <= newZ + loadedRadius; k++) {
+				if (!chunkData.contains(std::make_tuple(i, j, k)))
+					loadChunk(i, j, k);
+			}
+
+	// delete far away chunks
+	for (auto it = chunkData.begin(); it != chunkData.end(); /* no increment */) {
+		glm::vec3& chunkPos = it->second.chunk->chunkPosition;
+		if (std::abs((int)chunkPos.x - newX) >= loadedRadius + 2 ||
+				std::abs((int)chunkPos.y - newY) >= loadedRadius + 2 ||
+				std::abs((int)chunkPos.z - newZ) >= loadedRadius + 2)
+			it = unloadChunk(it);
+		else it++;
+	}
 }
 
 
@@ -82,7 +118,8 @@ void ChunkManager::loadChunk(int i, int j, int k) {
 
 
 /* finds chunk using arguments as chunk coordinates, then calls overloaded version on iterator */
-std::map<std::tuple<int, int, int>, ChunkManager::ChunkData>::iterator ChunkManager::unloadChunk(int i, int j, int k) {
+std::map<std::tuple<int, int, int>, ChunkManager::ChunkData>::iterator
+ChunkManager::unloadChunk(int i, int j, int k) {
 	auto data = chunkData.find(std::make_tuple(i, j, k));
 	if (data == chunkData.end()) return chunkData.end();
 	return unloadChunk(data);
@@ -94,7 +131,8 @@ std::map<std::tuple<int, int, int>, ChunkManager::ChunkData>::iterator ChunkMana
 * @param it: map iterator pointing to ChunkData to be deleted; must be valid
 * @returns iterator returned by map.erase()
 */
-std::map<std::tuple<int, int, int>, ChunkManager::ChunkData>::iterator ChunkManager::unloadChunk(std::map<std::tuple<int, int, int>, ChunkData>::iterator it) {
+std::map<std::tuple<int, int, int>, ChunkManager::ChunkData>::iterator
+ChunkManager::unloadChunk(std::map<std::tuple<int, int, int>, ChunkData>::iterator it) {
 	glm::vec3& cp = it->second.chunk->chunkPosition;
 	std::cout << "unloading chunk i=" << cp.x << ", j=" << cp.y << ", k=" << cp.z << std::endl;
 

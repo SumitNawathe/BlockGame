@@ -30,7 +30,8 @@ private:
 	};
 
 	std::map<std::tuple<int, int, int>, ChunkData> chunkData;
-	unsigned int loadedRadius;
+	int loadedRadius;
+	std::tuple<int, int, int> lastPlayerChunkPos;
 
 	void loadChunk(int i, int j, int k);
 	std::map<std::tuple<int, int, int>, ChunkData>::iterator unloadChunk(int i, int j, int k);
