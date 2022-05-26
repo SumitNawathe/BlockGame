@@ -1,7 +1,8 @@
 #ifndef CHUNK_H
-#define CHUNK
+#define CHUNK_H
 
 #include <vector>
+#include <map>
 #include <glm/glm.hpp>
 #include "block.h"
 
@@ -9,21 +10,22 @@ constexpr unsigned int CHUNK_SIZE = 16;
 
 class Chunk {
 public:
+	typedef typename std::vector<BlockVertex> ChunkBlockMesh;
+
 	glm::vec3 chunkPosition;
 	Block blocks[CHUNK_SIZE][CHUNK_SIZE][CHUNK_SIZE];
 
 	Chunk(glm::vec3 chunkPosition, Block blocks[CHUNK_SIZE][CHUNK_SIZE][CHUNK_SIZE]);
 
-	void getSideMesh(Direction, std::vector<BlockVertex>& output);
-	std::vector<BlockVertex> getSideMesh(Direction direction);
-	void getInteriorMesh(std::vector<BlockVertex>& output);
-	std::vector<BlockVertex> getInteriorMesh();
-	std::vector<BlockVertex> getMeshUnoptimized();
+	void getBlockMesh(std::map<Direction, Chunk*> neighbors, ChunkBlockMesh& output, bool forceEdge = true);
+	ChunkBlockMesh getBlockMesh(std::map<Direction, Chunk*> neighbors, bool forceEdge = true);
+	ChunkBlockMesh getMeshUnoptimized();
+
 
 private:
 	void generate();
-	void getBlockFace(Direction dir, unsigned int i, unsigned int j, unsigned int k, std::vector<BlockVertex>& output);
-	std::vector<BlockVertex> getBlockFace(Direction dir, unsigned int i, unsigned int j, unsigned int k);
+	void getBlockFace(Direction dir, unsigned int i, unsigned int j, unsigned int k, ChunkBlockMesh& output);
+	ChunkBlockMesh getBlockFace(Direction dir, unsigned int i, unsigned int j, unsigned int k);
 };
 
 #endif

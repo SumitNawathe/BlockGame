@@ -1,5 +1,8 @@
 #include <iostream>
 #include <vector>
+#include <map>
+#include <random>
+#include <ctime>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
@@ -12,6 +15,7 @@
 #include "block.h"
 #include "chunk.h"
 #include "texturemanager.h"
+#include "chunkmanager.h"
 
 void processInput(GLFWwindow*);
 void mouseCallback(GLFWwindow*, double xpos, double ypos);
@@ -31,6 +35,8 @@ float lastFrame = 0.0f;
 
 
 int main(int argc, char** argv) {
+	std::srand((unsigned) time(0));
+
 	glfwInit();
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
@@ -62,39 +68,12 @@ int main(int argc, char** argv) {
 
 	const char* vertSource = "C:/Users/Sumit Nawathe/source/repos/OpenGLLearningProject2/shaders/shader.vert";
 	const char* fragSource = "C:/Users/Sumit Nawathe/source/repos/OpenGLLearningProject2/shaders/shader.frag";
+
 	Shader shader(vertSource, fragSource);
 	shader.use();
 	glUniform1i(glGetUniformLocation(shader.ID, "primaryTexture"), 0);
 
-	unsigned int VAO;
-	glGenVertexArrays(1, &VAO);
-	glBindVertexArray(VAO);
-	
-	Chunk chunk(glm::vec3(0.0f, 0.0f, 0.0f), nullptr);
-	std::vector<BlockVertex> meshVector;
-	chunk.getSideMesh(Direction::NEGX, meshVector);
-	chunk.getSideMesh(Direction::POSX, meshVector);
-	chunk.getSideMesh(Direction::NEGY, meshVector);
-	chunk.getSideMesh(Direction::POSY, meshVector);
-	chunk.getSideMesh(Direction::NEGZ, meshVector);
-	chunk.getSideMesh(Direction::POSZ, meshVector);
-	chunk.getInteriorMesh(meshVector);
-	int meshLen = meshVector.size();
-	BlockVertex* mesh = meshVector.data();
-	
-	unsigned int VBO;
-	glGenBuffers(1, &VBO);
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, meshLen * sizeof(BlockVertex), mesh, GL_STATIC_DRAW);
-
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(BlockVertex), (void*) 0);
-	glEnableVertexAttribArray(0);
-
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(BlockVertex), (void*) offsetof(BlockVertex, normal));
-	glEnableVertexAttribArray(1);
-
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(BlockVertex), (void*)offsetof(BlockVertex, texCoords));
-	glEnableVertexAttribArray(2);
+	ChunkManager chunkManager;
 
 
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -107,7 +86,6 @@ int main(int argc, char** argv) {
 
 		shader.use();
 		TextureManager::getInstance().useTexture();
-		glBindVertexArray(VAO);
 
 		glm::mat4 projection = glm::mat4(1.0f);
 		projection = glm::perspective(glm::radians(camera.getZoom()), (float) SCREEN_WIDTH / (float) SCREEN_HEIGHT, 0.1f, 100.0f);
@@ -121,7 +99,8 @@ int main(int argc, char** argv) {
 		glm::mat4 model = glm::mat4(1.0f);
 
 		shader.setMat4("model", model);
-		glDrawArrays(GL_TRIANGLES, 0, meshLen);
+		//glDrawArrays(GL_TRIANGLES, 0, meshLen)
+		chunkManager.draw();
 		
 		glBindVertexArray(0);
 
