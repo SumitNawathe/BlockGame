@@ -60,6 +60,8 @@ public:
 				return false;
 			case BlockType::GRASS:
 				return true;
+			default:
+				return false;
 		}
 	}
 };

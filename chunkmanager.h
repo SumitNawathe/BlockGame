@@ -5,6 +5,7 @@
 #include <map>
 #include <utility>
 #include <tuple>
+#include <optional>
 #include <glm/glm.hpp>
 
 #include "chunk.h"
@@ -12,11 +13,12 @@
 
 class ChunkManager {
 public:
-	ChunkManager(glm::vec3 playerSpawnPos = glm::vec3(0.0f, 0.0f, 0.0f), int rad = 1);
+	ChunkManager(glm::vec3 playerSpawnPos = glm::vec3(0.0f, 0.0f, 0.0f), int rad = 2);
 	~ChunkManager();
 
 	void draw();
 	void updatePlayerPos(glm::vec3 playerPos);
+	bool breakBlock(glm::vec3 playerPos, glm::vec3 playerDir, float maxDist);
 
 private:
 	/* internal data structure for caching chunk meshes */
@@ -28,14 +30,17 @@ private:
 		bool loaded;
 		bool shouldBeUpdated;
 	};
+	typedef typename std::map<std::tuple<int, int, int>, ChunkData>::iterator ChunkDataIterator;
 
 	std::map<std::tuple<int, int, int>, ChunkData> chunkData;
 	int loadedRadius;
 	std::tuple<int, int, int> lastPlayerChunkPos;
 
+	std::map<Direction, Chunk*> getNeighbors(int i, int j, int k) const;
+	void depositChunkCache(ChunkData& cd) const;
 	void loadChunk(int i, int j, int k);
-	std::map<std::tuple<int, int, int>, ChunkData>::iterator unloadChunk(int i, int j, int k);
-	std::map<std::tuple<int, int, int>, ChunkData>::iterator unloadChunk(std::map<std::tuple<int, int, int>, ChunkData>::iterator it);
+	ChunkDataIterator unloadChunk(int i, int j, int k);
+	ChunkDataIterator unloadChunk(ChunkDataIterator it);
 };
 
 #endif

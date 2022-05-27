@@ -3,6 +3,29 @@
 #include <iostream>
 #include <glad/glad.h>
 
+
+/* floor function from float to int
+* ex: +2.4 -> 2, -2.4 ->3, -4.0 -> -4
+*/
+int ffloor(float input) {
+	if (input >= 0.0f) return static_cast<int>(input);
+	int truncated = static_cast<int>(input);
+	if ((float)truncated == input) return truncated;
+	return truncated - 1;
+}
+
+
+/* ceiling function from float to int
+* ex: +2.4 -> 3, -2.4 -> -2, -4.0 -> -4
+*/
+int fceil(float input) {
+	if (input <= 0.0f) return static_cast<int>(input);
+	int truncated = static_cast<int>(input);
+	if ((float)truncated == input) return truncated;
+	return truncated + 1;
+}
+
+
 /*
 * constructor
 * @param playerSpawnPos: the player's initial position, around which chunks will be loaded
@@ -11,13 +34,40 @@
 ChunkManager::ChunkManager(glm::vec3 playerSpawnPos, int rad) {
 	this->loadedRadius = rad;
 
-	int playerChunkX = (int)(playerSpawnPos.x / (float)CHUNK_SIZE);
-	int playerChunkY = (int)(playerSpawnPos.y / (float)CHUNK_SIZE);
-	int playerChunkZ = (int)(playerSpawnPos.z / (float)CHUNK_SIZE);
+	int playerChunkX = ffloor(playerSpawnPos.x / (float)CHUNK_SIZE);
+	int playerChunkY = ffloor(playerSpawnPos.y / (float)CHUNK_SIZE);
+	int playerChunkZ = ffloor(playerSpawnPos.z / (float)CHUNK_SIZE);
 	for (int i = playerChunkX - rad; i <= playerChunkX + rad; i++)
 		for (int j = playerChunkY - rad; j <= playerChunkY + rad; j++)
 			for (int k = playerChunkZ - rad; k <= playerChunkZ + rad; k++)
 				loadChunk(i, j, k);
+}
+
+
+std::map<Direction, Chunk*> ChunkManager::getNeighbors(int i, int j, int k) const {
+	std::map<Direction, Chunk*> ret;
+	ret.insert({ Direction::NEGX, (chunkData.contains(std::make_tuple(i - 1, j, k))) ? chunkData.find(std::make_tuple(i - 1, j, k))->second.chunk : nullptr });
+	ret.insert({ Direction::POSX, (chunkData.contains(std::make_tuple(i + 1, j, k))) ? chunkData.find(std::make_tuple(i + 1, j, k))->second.chunk : nullptr });
+	ret.insert({ Direction::NEGY, (chunkData.contains(std::make_tuple(i, j - 1, k))) ? chunkData.find(std::make_tuple(i, j - 1, k))->second.chunk : nullptr });
+	ret.insert({ Direction::POSY, (chunkData.contains(std::make_tuple(i, j + 1, k))) ? chunkData.find(std::make_tuple(i, j + 1, k))->second.chunk : nullptr });
+	ret.insert({ Direction::NEGZ, (chunkData.contains(std::make_tuple(i, j, k - 1))) ? chunkData.find(std::make_tuple(i, j, k - 1))->second.chunk : nullptr });
+	ret.insert({ Direction::POSZ, (chunkData.contains(std::make_tuple(i, j, k + 1))) ? chunkData.find(std::make_tuple(i, j, k + 1))->second.chunk : nullptr });
+	return ret;
+}
+
+
+/* send chunk data to chunk's VAO?/VBO */
+void ChunkManager::depositChunkCache(ChunkData& cd) const {
+	glBindVertexArray(cd.chunkVAO);
+	glBindBuffer(GL_ARRAY_BUFFER, cd.chunkVBO);
+	glBufferData(GL_ARRAY_BUFFER, cd.cache->size() * sizeof(BlockVertex), cd.cache->data(), GL_STATIC_DRAW);
+
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(BlockVertex), (void*) 0);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(BlockVertex), (void*) offsetof(BlockVertex, normal));
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(BlockVertex), (void*)offsetof(BlockVertex, texCoords));
+	glEnableVertexAttribArray(2);
 }
 
 
@@ -27,19 +77,22 @@ void ChunkManager::draw() {
 	for (auto& entry : chunkData) {
 		ChunkData& cd = entry.second;
 		if (cd.shouldBeUpdated) {
-			cd.chunk->getBlockMesh(std::map<Direction, Chunk*>(), *cd.cache);
-			cd.loaded = true;
+			glm::vec3 chunkCoords = cd.chunk->chunkPosition;
+			int cx = (int)(chunkCoords.x), cy = (int)(chunkCoords.y), cz = (int)(chunkCoords.z);
+			std::cout << "updatating chunk i=" << cx << ", j=" << cy << ", k=" << cz << std::endl;
+			cd.cache->clear();
+			cd.chunk->getBlockMesh(getNeighbors(cx, cy, cz), *cd.cache, cx == 0 && cy == 0 && cz == 0);
+			if (!cd.loaded) {
+				cd.loaded = true;
+				if (chunkData.contains(std::make_tuple(cx - 1, cy, cz))) chunkData.find(std::make_tuple(cx - 1, cy, cz))->second.shouldBeUpdated = true;
+				if (chunkData.contains(std::make_tuple(cx + 1, cy, cz))) chunkData.find(std::make_tuple(cx + 1, cy, cz))->second.shouldBeUpdated = true;
+				if (chunkData.contains(std::make_tuple(cx, cy - 1, cz))) chunkData.find(std::make_tuple(cx, cy - 1, cz))->second.shouldBeUpdated = true;
+				if (chunkData.contains(std::make_tuple(cx, cy + 1, cz))) chunkData.find(std::make_tuple(cx, cy + 1, cz))->second.shouldBeUpdated = true;
+				if (chunkData.contains(std::make_tuple(cx, cy, cz - 1))) chunkData.find(std::make_tuple(cx, cy, cz - 1))->second.shouldBeUpdated = true;
+				if (chunkData.contains(std::make_tuple(cx, cy, cz + 1))) chunkData.find(std::make_tuple(cx, cy, cz + 1))->second.shouldBeUpdated = true;
+			}
 			cd.shouldBeUpdated = false;
-			glBindVertexArray(cd.chunkVAO);
-			glBindBuffer(GL_ARRAY_BUFFER, cd.chunkVBO);
-			glBufferData(GL_ARRAY_BUFFER, cd.cache->size() * sizeof(BlockVertex), cd.cache->data(), GL_STATIC_DRAW);
-
-			glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(BlockVertex), (void*) 0);
-			glEnableVertexAttribArray(0);
-			glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(BlockVertex), (void*) offsetof(BlockVertex, normal));
-			glEnableVertexAttribArray(1);
-			glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(BlockVertex), (void*)offsetof(BlockVertex, texCoords));
-			glEnableVertexAttribArray(2);
+			depositChunkCache(cd);
 			break; // limit 1 chunk generation per draw call
 		}
 	}
@@ -57,24 +110,15 @@ void ChunkManager::draw() {
 }
 
 
-/* rounds float always downwards; ex: +2.4 => +2, -2.4 => -3 */
-int roundFloatDown(float input) {
-	if (input < 0.0f)
-		return static_cast<int>(input - 1.0f);
-	else
-		return static_cast<int>(input);
-}
-
-
 /*
 * loads/unloads chunks in response to player movement
 * @param playerPos: updated player position;
 */
 void ChunkManager::updatePlayerPos(glm::vec3 playerPos) {
 	// check if player has moved
-	int newX = roundFloatDown(playerPos.x / (float)CHUNK_SIZE);
-	int newY = roundFloatDown(playerPos.y / (float)CHUNK_SIZE);
-	int newZ = roundFloatDown(playerPos.z / (float)CHUNK_SIZE);
+	int newX = ffloor(playerPos.x / (float)CHUNK_SIZE);
+	int newY = ffloor(playerPos.y / (float)CHUNK_SIZE);
+	int newZ = ffloor(playerPos.z / (float)CHUNK_SIZE);
 	if (std::make_tuple(newX, newY, newZ) == lastPlayerChunkPos) return;
 	std::cout << "player has moved chunks" << std::endl;
 	lastPlayerChunkPos = std::make_tuple(newX, newY, newZ);
@@ -131,8 +175,7 @@ ChunkManager::unloadChunk(int i, int j, int k) {
 * @param it: map iterator pointing to ChunkData to be deleted; must be valid
 * @returns iterator returned by map.erase()
 */
-std::map<std::tuple<int, int, int>, ChunkManager::ChunkData>::iterator
-ChunkManager::unloadChunk(std::map<std::tuple<int, int, int>, ChunkData>::iterator it) {
+ChunkManager::ChunkDataIterator ChunkManager::unloadChunk(ChunkManager::ChunkDataIterator it) {
 	glm::vec3& cp = it->second.chunk->chunkPosition;
 	std::cout << "unloading chunk i=" << cp.x << ", j=" << cp.y << ", k=" << cp.z << std::endl;
 
@@ -148,6 +191,62 @@ ChunkManager::unloadChunk(std::map<std::tuple<int, int, int>, ChunkData>::iterat
 ChunkManager::~ChunkManager() {
 	for (auto it = chunkData.begin(); it != chunkData.end(); /* no increment */)
 		it = unloadChunk(it);
+}
+
+
+int nextIntUp(float input) {
+	int ans = fceil(input);
+	if ((float)ans == input)
+		return ans + 1;
+	return ans;
+}
+
+int nextIntDown(float input) {
+	int ans = ffloor(input);
+	if ((float)ans == input)
+		return ans - 1;
+	return ans;
+}
+
+
+bool ChunkManager::breakBlock(glm::vec3 p, glm::vec3 v, float maxDist) {
+	if (maxDist > 10.0f) { std::cout << "ERROR: maxDist (= " << maxDist << ") > 10.0f" << std::endl; exit(-1); }
+	else if (maxDist < 0.0f) { std::cout << "ERROR: maxDist (=" << maxDist << ") < 0.0f" << std::endl; exit(-1); }
+	else {
+		std::cout << "maxDist = " << maxDist << ", p = (" << p.x << ", " << p.y << ", " << p.z << ")" << std::endl;
+	}
+
+	// get chunk
+	int cpx = ffloor(p.x / (float)CHUNK_SIZE),
+		cpy = ffloor(p.y / (float)CHUNK_SIZE),
+		cpz = ffloor(p.z / (float)CHUNK_SIZE);
+	auto cdf = chunkData.find(std::make_tuple(cpx, cpy, cpz));
+	if (cdf == chunkData.end())
+		return false; // breaking block in chunk that doesn't exist
+	Chunk* chunk = cdf->second.chunk;
+	
+	// get coord in chunk
+	int cx = ffloor(p.x - (float)CHUNK_SIZE * cpx),
+		cy = ffloor(p.y - (float)CHUNK_SIZE * cpy),
+		cz = ffloor(p.z - (float)CHUNK_SIZE * cpz);
+	if (chunk->blocks[cx][cy][cz].isSolid()) {
+		// found block, break it
+		std::cout << "breaking block " << std::endl;
+		chunk->blocks[cx][cy][cz] = Block(BlockType::AIR, 0);
+		//chunk->blocks[cx][cy][cz].type = BlockType::AIR;
+		//chunk->blocks[cx][cy][cz].variant = 0;
+		cdf->second.shouldBeUpdated = true;
+		return true;
+	}
+
+	// block not breakable, calculate next position
+	float dx = (v.x >= 0) ? (float)nextIntUp(p.x) - p.x : p.x - (float)nextIntDown(p.x),
+		dy = (v.y >= 0) ? (float)nextIntUp(p.y) - p.y : p.y - (float)nextIntDown(p.y),
+		dz = (v.z >= 0) ? (float)nextIntUp(p.z) - p.z : p.z - (float)nextIntDown(p.z);
+	float min = std::min(std::min(dx / std::abs(v.x), dy / std::abs(v.y)), dz / std::abs(v.z)) + 0.001f;
+	if (min > maxDist)
+		return false; // next step would be too far
+	return breakBlock(p + min * v, v, maxDist - min);
 }
 
 

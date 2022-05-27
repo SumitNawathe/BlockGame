@@ -9,6 +9,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include "stb_image.h"
+#include "PerlinNoise.hpp"
 
 #include "shader.h"
 #include "camera.h"
@@ -17,14 +18,15 @@
 #include "texturemanager.h"
 #include "chunkmanager.h"
 
-void processInput(GLFWwindow*);
+void processInput(GLFWwindow*, ChunkManager&);
 void mouseCallback(GLFWwindow*, double xpos, double ypos);
+void mouseButtonCallback(GLFWwindow*, int, int, int);
 void scrollCallback(GLFWwindow* window, double xoffset, double yoffset);
 
 constexpr unsigned int SCREEN_WIDTH = 800;
 constexpr unsigned int SCREEN_HEIGHT = 600;
 
-Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
+Camera camera(glm::vec3(3.0f, 60.0f, 3.0f));
 float lastX = SCREEN_WIDTH / 2.0f;
 float lastY = SCREEN_HEIGHT / 2.0f;
 bool firstMouse = true;
@@ -32,6 +34,7 @@ bool firstMouse = true;
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 
+ChunkManager* chunkManagerPtr = nullptr;
 
 
 int main(int argc, char** argv) {
@@ -63,6 +66,7 @@ int main(int argc, char** argv) {
 	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 	glfwSetCursorPosCallback(window, mouseCallback);
 	glfwSetScrollCallback(window, scrollCallback);
+	glfwSetMouseButtonCallback(window, mouseButtonCallback);
 
 
 
@@ -74,11 +78,12 @@ int main(int argc, char** argv) {
 	glUniform1i(glGetUniformLocation(shader.ID, "primaryTexture"), 0);
 
 	ChunkManager chunkManager;
+	chunkManagerPtr = &chunkManager;
 
 
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	while (!glfwWindowShouldClose(window)) {
-		processInput(window);
+		processInput(window, chunkManager);
 
 		glEnable(GL_DEPTH_TEST);
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
@@ -114,7 +119,7 @@ int main(int argc, char** argv) {
 }
 
 
-void processInput(GLFWwindow* window) {
+void processInput(GLFWwindow* window, ChunkManager& chunkManager) {
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, true);
 
@@ -130,6 +135,15 @@ void processInput(GLFWwindow* window) {
 		camera.processKeyboard(CameraMovement::UP, deltaTime);
 	if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
 		camera.processKeyboard(CameraMovement::DOWN, deltaTime);
+}
+
+void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
+	if (chunkManagerPtr == nullptr)
+		return;
+	if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS) {
+		std::cout << "detected mouse right click" << std::endl;
+		chunkManagerPtr->breakBlock(camera.getPosition(), glm::normalize(camera.getFront()), 4.0f);
+	}
 }
 
 

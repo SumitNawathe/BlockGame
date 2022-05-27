@@ -4,6 +4,7 @@ typedef typename Chunk::ChunkBlockMesh ChunkBlockMesh;
 #include <vector>
 #include <iostream>
 #include "texturemanager.h"
+#include "NoiseGenerator.h"
 
 /*
 * Constructor for chunk
@@ -98,6 +99,51 @@ ChunkBlockMesh Chunk::getBlockFace(Direction dir, unsigned int i, unsigned int j
 }
 
 
+/* recalculates edge faces for the chunk edge in the given direction,
+* used for when new chunk on edge of render distance is generated */
+void Chunk::regenerateEdge(Direction dir, Chunk* neighbor, ChunkBlockMesh& output) {
+	switch (dir) {
+		case Direction::NEGX:
+			for (unsigned int j = 0; j < CHUNK_SIZE; j++)
+				for (unsigned int k = 0; k < CHUNK_SIZE; k++)
+					if (!neighbor->blocks[CHUNK_SIZE - 1][j][k].isSolid())
+						getBlockFace(Direction::NEGX, 0, j, k, output);
+			break;
+		case Direction::POSX:
+			for (unsigned int j = 0; j < CHUNK_SIZE; j++)
+				for (unsigned int k = 0; k < CHUNK_SIZE; k++)
+					if (!neighbor->blocks[0][j][k].isSolid())
+						getBlockFace(Direction::POSX, CHUNK_SIZE - 1, j, k, output);
+			break;
+		case Direction::NEGY:
+			for (unsigned int i = 0; i < CHUNK_SIZE; i++)
+				for (unsigned int k = 0; k < CHUNK_SIZE; k++)
+					if (!neighbor->blocks[i][CHUNK_SIZE - 1][k].isSolid())
+						getBlockFace(Direction::NEGY, i, 0, k, output);
+			break;
+		case Direction::POSY:
+			for (unsigned int i = 0; i < CHUNK_SIZE; i++)
+				for (unsigned int k = 0; k < CHUNK_SIZE; k++)
+					if (!neighbor->blocks[i][0][k].isSolid())
+						getBlockFace(Direction::NEGY, i, CHUNK_SIZE - 1, k, output);
+			break;
+		case Direction::NEGZ:
+			for (unsigned int i = 0; i < CHUNK_SIZE; i++)
+				for (unsigned int j = 0; j < CHUNK_SIZE; j++)
+					if (!neighbor->blocks[i][j][CHUNK_SIZE - 1].isSolid())
+						getBlockFace(Direction::NEGZ, i, j, 0, output);
+			break;
+		case Direction::POSZ:
+			for (unsigned int i = 0; i < CHUNK_SIZE; i++)
+				for (unsigned int j = 0; j < CHUNK_SIZE; j++)
+					if (!neighbor->blocks[i][j][0].isSolid())
+						getBlockFace(Direction::NEGZ, i, j, CHUNK_SIZE - 1, output);
+			break;
+		default:
+			break;
+	}
+}
+
 /*
 * calculates a mesh containing all block faces belonging to this chunk
 * @param neighbors: pointers to neighboring chunks, used for determining whether edge faces are shown
@@ -132,7 +178,7 @@ void Chunk::getBlockMesh(std::map<Direction, Chunk*> neighbors, ChunkBlockMesh& 
 				if ((j != CHUNK_SIZE - 1 && !blocks[i][j + 1][k].isSolid()) ||
 						(j == CHUNK_SIZE - 1 && forceEdge) ||
 						(j == CHUNK_SIZE - 1 && neighbors[Direction::POSY] != nullptr &&
-						!neighbors[Direction::POSY]->blocks[i][0][j].isSolid()))
+						!neighbors[Direction::POSY]->blocks[i][0][k].isSolid()))
 					getBlockFace(Direction::POSY, i, j, k, output);
 				if ((k != 0 && !blocks[i][j][k - 1].isSolid()) ||
 						(k == 0 && forceEdge) ||
@@ -216,13 +262,16 @@ ChunkBlockMesh Chunk::getMeshUnoptimized() {
    currently sets all blocks to be grass */
 void Chunk::generate() {
 	for (unsigned int i = 0; i < CHUNK_SIZE; i++)
-		for (unsigned int j = 0; j < CHUNK_SIZE; j++)
-			for (unsigned int k = 0; k < CHUNK_SIZE; k++) {
-				if (chunkPosition.y > 0)
+		for (unsigned int k = 0; k < CHUNK_SIZE; k++) {
+			int height = (int)(128.0f * NoiseGenerator::getInstance().generate2D(i + CHUNK_SIZE * chunkPosition.x, k + CHUNK_SIZE * chunkPosition.z));
+			//std::cout << "height: " << height << std::endl;
+			for (unsigned int j = 0; j < CHUNK_SIZE; j++) {
+				if ((int) j + CHUNK_SIZE * chunkPosition.y > height)
 					blocks[i][j][k] = Block(BlockType::AIR, 0);
 				else
 					blocks[i][j][k] = Block(BlockType::GRASS, 0);
 			}
+		}
 }
 
 
