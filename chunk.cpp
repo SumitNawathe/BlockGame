@@ -106,37 +106,43 @@ void Chunk::regenerateEdge(Direction dir, Chunk* neighbor, ChunkBlockMesh& outpu
 		case Direction::NEGX:
 			for (unsigned int j = 0; j < CHUNK_SIZE; j++)
 				for (unsigned int k = 0; k < CHUNK_SIZE; k++)
-					if (!neighbor->blocks[CHUNK_SIZE - 1][j][k].isSolid())
+					if (blocks[0][j][k].type == BlockType::AIR) continue;
+					else if (!neighbor->blocks[CHUNK_SIZE - 1][j][k].isSolid())
 						getBlockFace(Direction::NEGX, 0, j, k, output);
 			break;
 		case Direction::POSX:
 			for (unsigned int j = 0; j < CHUNK_SIZE; j++)
 				for (unsigned int k = 0; k < CHUNK_SIZE; k++)
-					if (!neighbor->blocks[0][j][k].isSolid())
+					if (blocks[CHUNK_SIZE - 1][j][k].type == BlockType::AIR) continue;
+					else if (!neighbor->blocks[0][j][k].isSolid())
 						getBlockFace(Direction::POSX, CHUNK_SIZE - 1, j, k, output);
 			break;
 		case Direction::NEGY:
 			for (unsigned int i = 0; i < CHUNK_SIZE; i++)
 				for (unsigned int k = 0; k < CHUNK_SIZE; k++)
-					if (!neighbor->blocks[i][CHUNK_SIZE - 1][k].isSolid())
+					if (blocks[i][0][k].type == BlockType::AIR) continue;
+					else if (!neighbor->blocks[i][CHUNK_SIZE - 1][k].isSolid())
 						getBlockFace(Direction::NEGY, i, 0, k, output);
 			break;
 		case Direction::POSY:
 			for (unsigned int i = 0; i < CHUNK_SIZE; i++)
 				for (unsigned int k = 0; k < CHUNK_SIZE; k++)
-					if (!neighbor->blocks[i][0][k].isSolid())
+					if (blocks[i][CHUNK_SIZE - 1][k].type == BlockType::AIR) continue;
+					else if (!neighbor->blocks[i][0][k].isSolid())
 						getBlockFace(Direction::NEGY, i, CHUNK_SIZE - 1, k, output);
 			break;
 		case Direction::NEGZ:
 			for (unsigned int i = 0; i < CHUNK_SIZE; i++)
 				for (unsigned int j = 0; j < CHUNK_SIZE; j++)
-					if (!neighbor->blocks[i][j][CHUNK_SIZE - 1].isSolid())
+					if (blocks[i][j][0].type == BlockType::AIR) continue;
+					else if (!neighbor->blocks[i][j][CHUNK_SIZE - 1].isSolid())
 						getBlockFace(Direction::NEGZ, i, j, 0, output);
 			break;
 		case Direction::POSZ:
 			for (unsigned int i = 0; i < CHUNK_SIZE; i++)
 				for (unsigned int j = 0; j < CHUNK_SIZE; j++)
-					if (!neighbor->blocks[i][j][0].isSolid())
+					if (blocks[i][j][CHUNK_SIZE - 1].type == BlockType::AIR) continue;
+					else if (!neighbor->blocks[i][j][0].isSolid())
 						getBlockFace(Direction::NEGZ, i, j, CHUNK_SIZE - 1, output);
 			break;
 		default:

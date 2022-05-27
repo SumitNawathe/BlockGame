@@ -90,10 +90,10 @@ void ChunkManager::draw() {
 				if (chunkData.contains(std::make_tuple(cx, cy + 1, cz))) chunkData.find(std::make_tuple(cx, cy + 1, cz))->second.shouldBeUpdated = true;
 				if (chunkData.contains(std::make_tuple(cx, cy, cz - 1))) chunkData.find(std::make_tuple(cx, cy, cz - 1))->second.shouldBeUpdated = true;
 				if (chunkData.contains(std::make_tuple(cx, cy, cz + 1))) chunkData.find(std::make_tuple(cx, cy, cz + 1))->second.shouldBeUpdated = true;
+				break; // limit 1 chunk generation per draw call
 			}
 			cd.shouldBeUpdated = false;
 			depositChunkCache(cd);
-			break; // limit 1 chunk generation per draw call
 		}
 	}
 
@@ -233,9 +233,32 @@ bool ChunkManager::breakBlock(glm::vec3 p, glm::vec3 v, float maxDist) {
 		// found block, break it
 		std::cout << "breaking block " << std::endl;
 		chunk->blocks[cx][cy][cz] = Block(BlockType::AIR, 0);
-		//chunk->blocks[cx][cy][cz].type = BlockType::AIR;
-		//chunk->blocks[cx][cy][cz].variant = 0;
 		cdf->second.shouldBeUpdated = true;
+		// if on edge, update neighbor
+		if (cx == 0) {
+			auto temp = chunkData.find(std::make_tuple(cpx - 1, cpy, cpz));
+			if (temp != chunkData.end()) temp->second.shouldBeUpdated = true;
+		}
+		if (cx == CHUNK_SIZE - 1) {
+			auto temp = chunkData.find(std::make_tuple(cpx + 1, cpy, cpz));
+			if (temp != chunkData.end()) temp->second.shouldBeUpdated = true;
+		}
+		if (cy == 0) {
+			auto temp = chunkData.find(std::make_tuple(cpx, cpy - 1, cpz));
+			if (temp != chunkData.end()) temp->second.shouldBeUpdated = true;
+		}
+		if (cy == CHUNK_SIZE - 1) {
+			auto temp = chunkData.find(std::make_tuple(cpx, cpy + 1, cpz));
+			if (temp != chunkData.end()) temp->second.shouldBeUpdated = true;
+		}
+		if (cz == 0) {
+			auto temp = chunkData.find(std::make_tuple(cpx, cpy, cpz - 1));
+			if (temp != chunkData.end()) temp->second.shouldBeUpdated = true;
+		}
+		if (cz == CHUNK_SIZE - 1) {
+			auto temp = chunkData.find(std::make_tuple(cpx, cpy, cpz + 1));
+			if (temp != chunkData.end()) temp->second.shouldBeUpdated = true;
+		}
 		return true;
 	}
 
