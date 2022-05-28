@@ -19,6 +19,8 @@ public:
 	Chunk(glm::vec3 chunkPosition, Block blocks[CHUNK_SIZE][CHUNK_SIZE][CHUNK_SIZE]);
 
 	void regenerateEdge(Direction dir, Chunk* neighbor, ChunkBlockMesh& output);
+	void getSingleBlockMesh(unsigned int i, unsigned int j, unsigned int k,
+		std::map<Direction, Chunk*> neighbors, ChunkBlockMesh& output, bool forceEdge = false);
 	void getBlockMesh(std::map<Direction, Chunk*> neighbors, ChunkBlockMesh& output, bool forceEdge = false);
 	ChunkBlockMesh getBlockMesh(std::map<Direction, Chunk*> neighbors, bool forceEdge = false);
 	ChunkBlockMesh getMeshUnoptimized();

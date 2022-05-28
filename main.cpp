@@ -144,6 +144,10 @@ void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
 		std::cout << "detected mouse right click" << std::endl;
 		chunkManagerPtr->breakBlock(camera.getPosition(), glm::normalize(camera.getFront()), 4.0f);
 	}
+	else if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
+		std::cout << "detected mouse left click" << std::endl;
+		chunkManagerPtr->placeBlock(camera.getPosition(), glm::normalize(camera.getFront()), 4.0f);
+	}
 }
 
 

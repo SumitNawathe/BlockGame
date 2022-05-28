@@ -18,7 +18,8 @@ public:
 
 	void draw();
 	void updatePlayerPos(glm::vec3 playerPos);
-	bool breakBlock(glm::vec3 playerPos, glm::vec3 playerDir, float maxDist);
+	bool breakBlock(glm::vec3 playerPos, glm::vec3 playerDir, float maxDist = 4.0f);
+	bool placeBlock(glm::vec3 playerPos, glm::vec3 playerDir, float maxDist = 4.0f);
 
 private:
 	/* internal data structure for caching chunk meshes */
@@ -41,6 +42,8 @@ private:
 	void loadChunk(int i, int j, int k);
 	ChunkDataIterator unloadChunk(int i, int j, int k);
 	ChunkDataIterator unloadChunk(ChunkDataIterator it);
+
+	bool performPlaceBlock(int cx, int cy, int cz, int bx, int by, int bz);
 };
 
 #endif

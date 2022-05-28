@@ -79,7 +79,7 @@ void ChunkManager::draw() {
 		if (cd.shouldBeUpdated) {
 			glm::vec3 chunkCoords = cd.chunk->chunkPosition;
 			int cx = (int)(chunkCoords.x), cy = (int)(chunkCoords.y), cz = (int)(chunkCoords.z);
-			std::cout << "updatating chunk i=" << cx << ", j=" << cy << ", k=" << cz << std::endl;
+			std::cout << "updating chunk i=" << cx << ", j=" << cy << ", k=" << cz << std::endl;
 			cd.cache->clear();
 			cd.chunk->getBlockMesh(getNeighbors(cx, cy, cz), *cd.cache, cx == 0 && cy == 0 && cz == 0);
 			if (!cd.loaded) {
@@ -210,11 +210,11 @@ int nextIntDown(float input) {
 
 
 bool ChunkManager::breakBlock(glm::vec3 p, glm::vec3 v, float maxDist) {
-	if (maxDist > 10.0f) { std::cout << "ERROR: maxDist (= " << maxDist << ") > 10.0f" << std::endl; exit(-1); }
-	else if (maxDist < 0.0f) { std::cout << "ERROR: maxDist (=" << maxDist << ") < 0.0f" << std::endl; exit(-1); }
-	else {
-		std::cout << "maxDist = " << maxDist << ", p = (" << p.x << ", " << p.y << ", " << p.z << ")" << std::endl;
-	}
+	//if (maxDist > 10.0f) { std::cout << "ERROR: maxDist (= " << maxDist << ") > 10.0f" << std::endl; exit(-1); }
+	//else if (maxDist < 0.0f) { std::cout << "ERROR: maxDist (=" << maxDist << ") < 0.0f" << std::endl; exit(-1); }
+	//else {
+		//std::cout << "maxDist = " << maxDist << ", p = (" << p.x << ", " << p.y << ", " << p.z << ")" << std::endl;
+	//}
 
 	// get chunk
 	int cpx = ffloor(p.x / (float)CHUNK_SIZE),
@@ -270,6 +270,87 @@ bool ChunkManager::breakBlock(glm::vec3 p, glm::vec3 v, float maxDist) {
 	if (min > maxDist)
 		return false; // next step would be too far
 	return breakBlock(p + min * v, v, maxDist - min);
+}
+
+
+bool approxInt(float input) {
+	return (std::abs(input - ffloor(input))) < 0.01 || (std::abs(input - fceil(input))) < 0.01;
+}
+
+
+bool ChunkManager::performPlaceBlock(int cx, int cy, int cz, int bx, int by, int bz) {
+	auto cdf = chunkData.find(std::make_tuple(cx, cy, cz));
+	if (cdf == chunkData.end()) return false;
+	cdf->second.chunk->blocks[bx][by][bz] = Block(BlockType::GRASS, 0);
+	cdf->second.chunk->getSingleBlockMesh(bx, by, bz, std::map<Direction, Chunk*>(), *cdf->second.cache, true);
+	depositChunkCache(cdf->second);
+	return true;
+}
+
+
+bool ChunkManager::placeBlock(glm::vec3 p, glm::vec3 v, float maxDist) {
+	if (maxDist > 10.0f) { std::cout << "ERROR: maxDist (= " << maxDist << ") > 10.0f" << std::endl; exit(-1); }
+	else if (maxDist < 0.0f) { std::cout << "ERROR: maxDist (=" << maxDist << ") < 0.0f" << std::endl; exit(-1); }
+	else {
+		std::cout << "maxDist = " << maxDist << ", p = (" << p.x << ", " << p.y << ", " << p.z << ")" << std::endl;
+	}
+
+	// move to next block side
+	float dx = (v.x >= 0) ? (float)nextIntUp(p.x) - p.x : p.x - (float)nextIntDown(p.x),
+		dy = (v.y >= 0) ? (float)nextIntUp(p.y) - p.y : p.y - (float)nextIntDown(p.y),
+		dz = (v.z >= 0) ? (float)nextIntUp(p.z) - p.z : p.z - (float)nextIntDown(p.z);
+	float min = std::min(std::min(dx / std::abs(v.x), dy / std::abs(v.y)), dz / std::abs(v.z)) + 0.001f;
+	if (min > maxDist)
+		return false; // step would be too far
+	glm::vec3 np = p + min * v;
+
+	// get chunk
+	int cpx = ffloor(np.x / (float)CHUNK_SIZE),
+		cpy = ffloor(np.y / (float)CHUNK_SIZE),
+		cpz = ffloor(np.z / (float)CHUNK_SIZE);
+	auto cdf = chunkData.find(std::make_tuple(cpx, cpy, cpz));
+	if (cdf == chunkData.end())
+		return false; // chunk doesn't exist
+	Chunk* chunk = cdf->second.chunk;
+	
+	// get coord in chunk
+	int cx = ffloor(np.x - (float)CHUNK_SIZE * cpx),
+		cy = ffloor(np.y - (float)CHUNK_SIZE * cpy),
+		cz = ffloor(np.z - (float)CHUNK_SIZE * cpz);
+	if (chunk->blocks[cx][cy][cz].isSolid()) {
+		// found block, place alongside it
+		std::cout << "placing block " << std::endl;
+
+		if (approxInt(np.x)) {
+			if (v.x >= 0.0f) {
+				if (cx == 0) performPlaceBlock(cpx - 1, cpy, cpz, CHUNK_SIZE - 1, cy, cz);
+				else performPlaceBlock(cpx, cpy, cpz, cx - 1, cy, cz);
+			} else {
+				if (cx == CHUNK_SIZE - 1) performPlaceBlock(cpx + 1, cpy, cpz, 0, cy, cz);
+				else performPlaceBlock(cpx, cpy, cpz, cx + 1, cy, cz);
+			}
+		} else if (approxInt(np.z)) {
+			if (v.z >= 0.0f) {
+				if (cz == 0) performPlaceBlock(cpx, cpy, cpz - 1, cx, cy, CHUNK_SIZE - 1);
+				else performPlaceBlock(cpx, cpy, cpz, cx, cy, cz - 1);
+			} else {
+				if (cz == CHUNK_SIZE - 1) performPlaceBlock(cpx, cpy, cpz + 1, cx, cy, 0);
+				else performPlaceBlock(cpx, cpy, cpz, cx, cy, cz + 1);
+			}
+		} else {
+			if (v.y >= 0.0f) {
+				if (cy == 0) performPlaceBlock(cpx, cpy - 1, cpz, cx, CHUNK_SIZE - 1, cz);
+				else performPlaceBlock(cpx, cpy, cpz, cx, cy - 1, cz);
+			} else {
+				if (cy == CHUNK_SIZE - 1) performPlaceBlock(cpx, cpy + 1, cpz, cx, 0, cz);
+				else performPlaceBlock(cpx, cpy, cpz, cx, cy + 1, cz);
+			}
+		}
+		return true;
+	}
+
+	// block not placeable, calculate next position
+	return placeBlock(np, v, maxDist - min);
 }
 
 

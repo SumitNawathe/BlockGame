@@ -150,6 +150,49 @@ void Chunk::regenerateEdge(Direction dir, Chunk* neighbor, ChunkBlockMesh& outpu
 	}
 }
 
+
+void Chunk::getSingleBlockMesh(unsigned int i, unsigned int j, unsigned int k,
+		std::map<Direction, Chunk*> neighbors, ChunkBlockMesh& output, bool forceEdge) {
+	// check if block should be drawn
+	if (blocks[i][j][k].type == BlockType::AIR)
+		return;
+
+	/* for each block, only draw if either
+	* (1) not on edge, and not next to solid block
+	* (2) on edge, have neighbor chunk, and neighbor block not solid */
+	if ((i != 0 && !blocks[i - 1][j][k].isSolid()) ||
+			(i == 0 && forceEdge) ||
+			(i == 0 && neighbors[Direction::NEGX] != nullptr &&
+			!neighbors[Direction::NEGX]->blocks[CHUNK_SIZE - 1][j][k].isSolid()))
+		getBlockFace(Direction::NEGX, i, j, k, output);
+	if ((i != CHUNK_SIZE - 1 && !blocks[i + 1][j][k].isSolid()) ||
+			(i == CHUNK_SIZE - 1 && forceEdge) || 
+			(i == CHUNK_SIZE - 1 && neighbors[Direction::POSX] != nullptr &&
+			!neighbors[Direction::POSX]->blocks[0][j][k].isSolid()))
+		getBlockFace(Direction::POSX, i, j, k, output);
+	if ((j != 0 && !blocks[i][j - 1][k].isSolid()) ||
+			(j == 0 && forceEdge) ||
+			(j == 0 && neighbors[Direction::NEGY] != nullptr &&
+			!neighbors[Direction::NEGY]->blocks[i][CHUNK_SIZE - 1][k].isSolid()))
+		getBlockFace(Direction::NEGY, i, j, k, output);
+	if ((j != CHUNK_SIZE - 1 && !blocks[i][j + 1][k].isSolid()) ||
+			(j == CHUNK_SIZE - 1 && forceEdge) ||
+			(j == CHUNK_SIZE - 1 && neighbors[Direction::POSY] != nullptr &&
+			!neighbors[Direction::POSY]->blocks[i][0][k].isSolid()))
+		getBlockFace(Direction::POSY, i, j, k, output);
+	if ((k != 0 && !blocks[i][j][k - 1].isSolid()) ||
+			(k == 0 && forceEdge) ||
+			(k == 0 && neighbors[Direction::NEGZ] != nullptr &&
+						!neighbors[Direction::NEGZ]->blocks[i][j][CHUNK_SIZE - 1].isSolid()))
+		getBlockFace(Direction::NEGZ, i, j, k, output);
+	if ((k != CHUNK_SIZE - 1 && !blocks[i][j][k + 1].isSolid()) ||
+			(k == CHUNK_SIZE - 1 && forceEdge) ||
+			(k == CHUNK_SIZE - 1 && neighbors[Direction::POSZ] != nullptr &&
+			!neighbors[Direction::POSZ]->blocks[i][j][0].isSolid()))
+		getBlockFace(Direction::POSZ, i, j, k, output);
+}
+
+
 /*
 * calculates a mesh containing all block faces belonging to this chunk
 * @param neighbors: pointers to neighboring chunks, used for determining whether edge faces are shown
@@ -159,6 +202,8 @@ void Chunk::getBlockMesh(std::map<Direction, Chunk*> neighbors, ChunkBlockMesh& 
 	for (unsigned int i = 0; i < CHUNK_SIZE; i++)
 		for (unsigned int j = 0; j < CHUNK_SIZE; j++)
 			for (unsigned int k = 0; k < CHUNK_SIZE; k++) {
+				//getSingleBlockMesh(i, j, k, neighbors, output, forceEdge);
+
 				// check if block should be drawn
 				if (blocks[i][j][k].type == BlockType::AIR)
 					continue;
