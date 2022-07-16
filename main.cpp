@@ -1,25 +1,32 @@
 #include <iostream>
 #include <vector>
+#include <map>
+#include <random>
+#include <ctime>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include "stb_image.h"
+#include "PerlinNoise.hpp"
 
 #include "shader.h"
 #include "camera.h"
 #include "block.h"
 #include "chunk.h"
+#include "texturemanager.h"
+#include "chunkmanager.h"
 
-void processInput(GLFWwindow*);
+void processInput(GLFWwindow*, ChunkManager&);
 void mouseCallback(GLFWwindow*, double xpos, double ypos);
+void mouseButtonCallback(GLFWwindow*, int, int, int);
 void scrollCallback(GLFWwindow* window, double xoffset, double yoffset);
 
 constexpr unsigned int SCREEN_WIDTH = 800;
 constexpr unsigned int SCREEN_HEIGHT = 600;
 
-Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
+Camera camera(glm::vec3(3.0f, 60.0f, 3.0f));
 float lastX = SCREEN_WIDTH / 2.0f;
 float lastY = SCREEN_HEIGHT / 2.0f;
 bool firstMouse = true;
@@ -27,9 +34,12 @@ bool firstMouse = true;
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 
+ChunkManager* chunkManagerPtr = nullptr;
 
 
 int main(int argc, char** argv) {
+	std::srand((unsigned) time(0));
+
 	glfwInit();
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
@@ -56,190 +66,31 @@ int main(int argc, char** argv) {
 	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 	glfwSetCursorPosCallback(window, mouseCallback);
 	glfwSetScrollCallback(window, scrollCallback);
+	glfwSetMouseButtonCallback(window, mouseButtonCallback);
 
 
 
 	const char* vertSource = "C:/Users/Sumit Nawathe/source/repos/OpenGLLearningProject2/shaders/shader.vert";
 	const char* fragSource = "C:/Users/Sumit Nawathe/source/repos/OpenGLLearningProject2/shaders/shader.frag";
+
 	Shader shader(vertSource, fragSource);
-
-	stbi_set_flip_vertically_on_load(true);
-	int width, height, nrChannels;
-	unsigned char* data = stbi_load("C:/Users/Sumit Nawathe/source/repos/OpenGLLearningProject2/images/container.jpg", &width, &height, &nrChannels, 0);
-	if (!data) {
-		std::cout << "Failed to load texture" << std::endl;
-		return -1;
-	}
-	unsigned int texture;
-	glGenTextures(1, &texture);
-	glBindTexture(GL_TEXTURE_2D, texture);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-	glGenerateMipmap(GL_TEXTURE_2D);
-	stbi_image_free(data);
-
-	data = stbi_load("C:/Users/Sumit Nawathe/source/repos/OpenGLLearningProject2/images/awesomeface.png", &width, &height, &nrChannels, 0);
-	if (!data) {
-		std::cout << "Failed to load texture" << std::endl;
-		return -1;
-	}
-	unsigned int texture2;
-	glGenTextures(1, &texture2);
-	glBindTexture(GL_TEXTURE_2D, texture2);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-	glGenerateMipmap(GL_TEXTURE_2D);
-	stbi_image_free(data);
-
 	shader.use();
 	glUniform1i(glGetUniformLocation(shader.ID, "primaryTexture"), 0);
-	//shader.setInt("texture2", 1);
+
+	ChunkManager chunkManager;
+	chunkManagerPtr = &chunkManager;
 
 
-
-	unsigned int VAO;
-	glGenVertexArrays(1, &VAO);
-	glBindVertexArray(VAO);
-
-	//BlockVertex mesh[] = {
-		//BlockVertex(-0.5f, -0.5f, -0.5f,  0.0, 0.0, 0.0, 0.0f, 0.0f),
-		//BlockVertex(0.5f, -0.5f, -0.5f,  0.0, 0.0, 0.0, 1.0f, 0.0f),
-		//BlockVertex(0.5f,  0.5f, -0.5f,  0.0, 0.0, 0.0, 1.0f, 1.0f),
-		//BlockVertex(0.5f,  0.5f, -0.5f,  0.0, 0.0, 0.0, 1.0f, 1.0f),
-		//BlockVertex(-0.5f,  0.5f, -0.5f,  0.0, 0.0, 0.0, 0.0f, 1.0f),
-		//BlockVertex(-0.5f, -0.5f, -0.5f,  0.0, 0.0, 0.0, 0.0f, 0.0f),
-	//
-		//BlockVertex(-0.5f, -0.5f,  0.5f,  0.0, 0.0, 0.0, 0.0f, 0.0f),
-		//BlockVertex(0.5f, -0.5f,  0.5f,  0.0, 0.0, 0.0, 1.0f, 0.0f),
-		//BlockVertex(0.5f,  0.5f,  0.5f,  0.0, 0.0, 0.0, 1.0f, 1.0f),
-		//BlockVertex(0.5f,  0.5f,  0.5f,  0.0, 0.0, 0.0, 1.0f, 1.0f),
-		//BlockVertex(-0.5f,  0.5f,  0.5f,  0.0, 0.0, 0.0, 0.0f, 1.0f),
-		//BlockVertex(-0.5f, -0.5f,  0.5f,  0.0, 0.0, 0.0, 0.0f, 0.0f),
-	//
-		//BlockVertex(-0.5f,  0.5f,  0.5f,  0.0, 0.0, 0.0, 1.0f, 0.0f),
-		//BlockVertex(-0.5f,  0.5f, -0.5f,  0.0, 0.0, 0.0, 1.0f, 1.0f),
-		//BlockVertex(-0.5f, -0.5f, -0.5f,  0.0, 0.0, 0.0, 0.0f, 1.0f),
-		//BlockVertex(-0.5f, -0.5f, -0.5f,  0.0, 0.0, 0.0, 0.0f, 1.0f),
-		//BlockVertex(-0.5f, -0.5f,  0.5f,  0.0, 0.0, 0.0, 0.0f, 0.0f),
-		//BlockVertex(-0.5f,  0.5f,  0.5f,  0.0, 0.0, 0.0, 1.0f, 0.0f),
-	//
-		//BlockVertex(0.5f,  0.5f,  0.5f,  0.0, 0.0, 0.0, 1.0f, 0.0f),
-		//BlockVertex(0.5f,  0.5f, -0.5f,  0.0, 0.0, 0.0, 1.0f, 1.0f),
-		//BlockVertex(0.5f, -0.5f, -0.5f,  0.0, 0.0, 0.0, 0.0f, 1.0f),
-		//BlockVertex(0.5f, -0.5f, -0.5f,  0.0, 0.0, 0.0, 0.0f, 1.0f),
-		//BlockVertex(0.5f, -0.5f,  0.5f,  0.0, 0.0, 0.0, 0.0f, 0.0f),
-		//BlockVertex(0.5f,  0.5f,  0.5f,  0.0, 0.0, 0.0, 1.0f, 0.0f),
-	//
-		//BlockVertex(-0.5f, -0.5f, -0.5f,  0.0, 0.0, 0.0, 0.0f, 1.0f),
-		//BlockVertex(0.5f, -0.5f, -0.5f,  0.0, 0.0, 0.0, 1.0f, 1.0f),
-		//BlockVertex(0.5f, -0.5f,  0.5f,  0.0, 0.0, 0.0, 1.0f, 0.0f),
-		//BlockVertex(0.5f, -0.5f,  0.5f,  0.0, 0.0, 0.0, 1.0f, 0.0f),
-		//BlockVertex(-0.5f, -0.5f,  0.5f,  0.0, 0.0, 0.0, 0.0f, 0.0f),
-		//BlockVertex(-0.5f, -0.5f, -0.5f,  0.0, 0.0, 0.0, 0.0f, 1.0f),
-	//
-		//BlockVertex(-0.5f,  0.5f, -0.5f,  0.0, 0.0, 0.0, 0.0f, 1.0f),
-		//BlockVertex(0.5f,  0.5f, -0.5f,  0.0, 0.0, 0.0, 1.0f, 1.0f),
-		//BlockVertex(0.5f,  0.5f,  0.5f,  0.0, 0.0, 0.0, 1.0f, 0.0f),
-		//BlockVertex(0.5f,  0.5f,  0.5f,  0.0, 0.0, 0.0, 1.0f, 0.0f),
-		//BlockVertex(-0.5f,  0.5f,  0.5f,  0.0, 0.0, 0.0, 0.0f, 0.0f),
-		//BlockVertex(-0.5f,  0.5f, -0.5f,  0.0, 0.0, 0.0, 0.0f, 1.0f)
-	//};
-	Chunk chunk(glm::vec3(0.0f, 0.0f, 0.0f), nullptr);
-	//std::vector<BlockVertex> meshVector = chunk.getMeshUnoptimized();
-	std::vector<BlockVertex> meshVector;
-	chunk.getSideMesh(Direction::NEGX, meshVector);
-	chunk.getSideMesh(Direction::POSX, meshVector);
-	chunk.getSideMesh(Direction::NEGY, meshVector);
-	chunk.getSideMesh(Direction::POSY, meshVector);
-	chunk.getSideMesh(Direction::NEGZ, meshVector);
-	chunk.getSideMesh(Direction::POSZ, meshVector);
-	chunk.getInteriorMesh(meshVector);
-	int meshLen = meshVector.size();
-	BlockVertex* mesh = meshVector.data();
-	
-
-	//float vertices[] = {
-		//-0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
-		//0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
-		//0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-		//0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-		//-0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
-		//-0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
-	//
-		//-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-		//0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-		//0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
-		//0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
-		//-0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
-		//-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-	//
-		//-0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-		//-0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-		//-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-		//-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-		//-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-		//-0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-	//
-		//0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-		//0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-		//0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-		//0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-		//0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-		//0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-	//
-		//-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-		//0.5f, -0.5f, -0.5f,  1.0f, 1.0f,
-		//0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-		//0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-		//-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-		//-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-	//
-		//-0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
-		//0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-		//0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-		//0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-		//-0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
-		//-0.5f,  0.5f, -0.5f,  0.0f, 1.0f
-	//};
-	//glm::vec3 cubePositions[] = {
-		//glm::vec3( 0.0f,  0.0f,  0.0f), 
-		//glm::vec3( 2.0f,  5.0f, -15.0f), 
-		//glm::vec3(-1.5f, -2.2f, -2.5f),  
-		//glm::vec3(-3.8f, -2.0f, -12.3f),  
-		//glm::vec3( 2.4f, -0.4f, -3.5f),  
-		//glm::vec3(-1.7f,  3.0f, -7.5f),  
-		//glm::vec3( 1.3f, -2.0f, -2.5f),  
-		//glm::vec3( 1.5f,  2.0f, -2.5f), 
-		//glm::vec3( 1.5f,  0.2f, -1.5f), 
-		//glm::vec3(-1.3f,  1.0f, -1.5f)  
-	//};
-	unsigned int VBO;
-	glGenBuffers(1, &VBO);
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, meshLen * sizeof(BlockVertex), mesh, GL_STATIC_DRAW);
-
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(BlockVertex), (void*) 0);
-	glEnableVertexAttribArray(0);
-
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(BlockVertex), (void*) offsetof(BlockVertex, normal));
-	glEnableVertexAttribArray(1);
-
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(BlockVertex), (void*)offsetof(BlockVertex, texCoords));
-	glEnableVertexAttribArray(2);
-
-
-	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	while (!glfwWindowShouldClose(window)) {
-		processInput(window);
+		processInput(window, chunkManager);
 
 		glEnable(GL_DEPTH_TEST);
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		shader.use();
-		//glActiveTexture(GL_TEXTURE0);
-		//glBindTexture(GL_TEXTURE_2D, texture);
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, texture2);
-		glBindVertexArray(VAO);
+		TextureManager::getInstance().useTexture();
 
 		glm::mat4 projection = glm::mat4(1.0f);
 		projection = glm::perspective(glm::radians(camera.getZoom()), (float) SCREEN_WIDTH / (float) SCREEN_HEIGHT, 0.1f, 100.0f);
@@ -250,20 +101,12 @@ int main(int argc, char** argv) {
 		lastFrame = currentFrame;
 		glm::mat4 view = camera.getViewMatrix();
 		shader.setMat4("view", view);
-
-		//for (unsigned int i = 0; i < 10; i++) {
-			//glm::mat4 model = glm::mat4(1.0f);
-			//model = glm::translate(model, cubePositions[i]);
-			//float angle = 20.0f * i;
-			//model = glm::rotate(model, (float)glfwGetTime() * glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
-			//shader.setMat4("model", model);
-			//
-			//glDrawArrays(GL_TRIANGLES, 0, 36);
-		//}
-
 		glm::mat4 model = glm::mat4(1.0f);
+
 		shader.setMat4("model", model);
-		glDrawArrays(GL_TRIANGLES, 0, meshLen);
+		//glDrawArrays(GL_TRIANGLES, 0, meshLen)
+		chunkManager.updatePlayerPos(camera.getPosition());
+		chunkManager.draw();
 		
 		glBindVertexArray(0);
 
@@ -276,7 +119,7 @@ int main(int argc, char** argv) {
 }
 
 
-void processInput(GLFWwindow* window) {
+void processInput(GLFWwindow* window, ChunkManager& chunkManager) {
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, true);
 
@@ -292,6 +135,19 @@ void processInput(GLFWwindow* window) {
 		camera.processKeyboard(CameraMovement::UP, deltaTime);
 	if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
 		camera.processKeyboard(CameraMovement::DOWN, deltaTime);
+}
+
+void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
+	if (chunkManagerPtr == nullptr)
+		return;
+	if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS) {
+		std::cout << "detected mouse right click" << std::endl;
+		chunkManagerPtr->breakBlock(camera.getPosition(), glm::normalize(camera.getFront()), 4.0f);
+	}
+	else if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
+		std::cout << "detected mouse left click" << std::endl;
+		chunkManagerPtr->placeBlock(camera.getPosition(), glm::normalize(camera.getFront()), 4.0f);
+	}
 }
 
 
