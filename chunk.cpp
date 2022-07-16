@@ -315,7 +315,6 @@ void Chunk::generate() {
 	for (unsigned int i = 0; i < CHUNK_SIZE; i++)
 		for (unsigned int k = 0; k < CHUNK_SIZE; k++) {
 			int height = (int)(128.0f * NoiseGenerator::getInstance().generate2D(i + CHUNK_SIZE * chunkPosition.x, k + CHUNK_SIZE * chunkPosition.z));
-			//std::cout << "height: " << height << std::endl;
 			for (unsigned int j = 0; j < CHUNK_SIZE; j++) {
 				if ((int) j + CHUNK_SIZE * chunkPosition.y > height)
 					blocks[i][j][k] = Block(BlockType::AIR, 0);

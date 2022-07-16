@@ -11,6 +11,7 @@
 #include "stb_image.h"
 #include "PerlinNoise.hpp"
 
+#include "globals.h"
 #include "shader.h"
 #include "camera.h"
 #include "block.h"
@@ -47,14 +48,14 @@ int main(int argc, char** argv) {
 
 	GLFWwindow* window = glfwCreateWindow(800, 600, "LeanOpenGL", NULL, NULL);
 	if (window == NULL) {
-		std::cout << "Failed to create GLFW window" << std::endl;
+		if constexpr (DEBUG) std::cout << "Failed to create GLFW window" << std::endl;
 		glfwTerminate();
 		return -1;
 	}
 	glfwMakeContextCurrent(window);
 
 	if (!gladLoadGLLoader((GLADloadproc) glfwGetProcAddress)) {
-		std::cout << "Failed to initialize GLAD" << std::endl; 
+		if constexpr (DEBUG) std::cout << "Failed to initialize GLAD" << std::endl; 
 		glfwTerminate();
 		return -1;
 	}
@@ -141,11 +142,11 @@ void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
 	if (chunkManagerPtr == nullptr)
 		return;
 	if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS) {
-		std::cout << "detected mouse right click" << std::endl;
+		if constexpr (DEBUG) std::cout << "detected mouse right click" << std::endl;
 		chunkManagerPtr->breakBlock(camera.getPosition(), glm::normalize(camera.getFront()), 4.0f);
 	}
 	else if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
-		std::cout << "detected mouse left click" << std::endl;
+		if constexpr (DEBUG) std::cout << "detected mouse left click" << std::endl;
 		chunkManagerPtr->placeBlock(camera.getPosition(), glm::normalize(camera.getFront()), 4.0f);
 	}
 }

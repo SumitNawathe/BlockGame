@@ -4,6 +4,7 @@ typedef typename TextureManager::TextureQuery TextureQuery;
 
 #include <iostream>
 #include <glad/glad.h>
+#include "globals.h"
 #include "stb_image.h"
 
 TextureResult TextureManager::getUVCoords(BlockType type, Direction dir) {
@@ -16,7 +17,7 @@ TextureManager::TextureManager() {
 	stbi_set_flip_vertically_on_load(true);
 	unsigned char* data = stbi_load(TEXTURE_ATLAS_PATH, &width, &height, &numChannels, 0);
 	if (!data) {
-		std::cout << "Failed to load texture atlas: " << TEXTURE_ATLAS_PATH << std::endl;
+		if constexpr (DEBUG) std::cout << "Failed to load texture atlas: " << TEXTURE_ATLAS_PATH << std::endl;
 		exit(-1);
 	}
 
@@ -28,7 +29,7 @@ TextureManager::TextureManager() {
 	 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	stbi_image_free(data);
 
-	std::cout << "TextureManager: width = " << width <<
+	if constexpr (DEBUG && VERBOSE) std::cout << "TextureManager: width = " << width <<
 		", height = " << height << ", numChannels = " << numChannels << std::endl;
 
 	registerUVCoords();

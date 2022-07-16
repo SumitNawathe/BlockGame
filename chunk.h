@@ -4,9 +4,8 @@
 #include <map>
 #include <tuple>
 #include <glm/glm.hpp>
+#include "globals.h"
 #include "block.h"
-
-constexpr unsigned int CHUNK_SIZE = 16;
 
 class Chunk {
 public:
