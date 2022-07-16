@@ -1,5 +1,4 @@
-#ifndef NOISE_GENERATOR_H
-#define NOISE_GENERATOR_H
+#pragma once
 
 #include "PerlinNoise.hpp"
 
@@ -15,6 +14,4 @@ private:
 	NoiseGenerator();
 	siv::BasicPerlinNoise<float> perlinNoise;
 };
-
-#endif
 

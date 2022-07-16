@@ -1,5 +1,4 @@
-#ifndef BLOCK_H
-#define BLOCK_H
+#pragma once
 
 #include <glm/glm.hpp>
 
@@ -65,6 +64,4 @@ public:
 		}
 	}
 };
-
-#endif
 

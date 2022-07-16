@@ -1,5 +1,4 @@
-#ifndef CHUNK_MANAGER_H
-#define CHUNK_MANAGER_H
+#pragma once
 
 #include <vector>
 #include <map>
@@ -45,6 +44,4 @@ private:
 
 	bool performPlaceBlock(int cx, int cy, int cz, int bx, int by, int bz);
 };
-
-#endif
 

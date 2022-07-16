@@ -1,5 +1,4 @@
-#ifndef TEXTURE_MANAGER_H
-#define TEXTURE_MANAGER_H
+#pragma once
 
 #include <vector>
 #include <map>
@@ -44,6 +43,4 @@ private:
 	TextureManager(const TextureManager&) = delete;
 	void operator=(const TextureManager&) = delete;
 };
-
-#endif
 

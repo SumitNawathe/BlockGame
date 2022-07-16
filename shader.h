@@ -1,5 +1,4 @@
-#ifndef SHADER_H
-#define SHADER_H
+#pragma once
 
 #include <string>
 #include <fstream>
@@ -30,7 +29,5 @@ public:
 	void setMat3(const char* name, const glm::mat3& value) const;
 	void setMat4(const char* name, const glm::mat4& value) const;
 };
-
-#endif
 
 

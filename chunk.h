@@ -1,5 +1,4 @@
-#ifndef CHUNK_H
-#define CHUNK_H
+#pragma once
 
 #include <vector>
 #include <map>
@@ -31,6 +30,4 @@ private:
 	void getBlockFace(Direction dir, unsigned int i, unsigned int j, unsigned int k, ChunkBlockMesh& output);
 	ChunkBlockMesh getBlockFace(Direction dir, unsigned int i, unsigned int j, unsigned int k);
 };
-
-#endif
 
