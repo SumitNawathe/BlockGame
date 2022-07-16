@@ -11,7 +11,7 @@ TextureResult TextureManager::getUVCoords(BlockType type, Direction dir) {
 }
 
 
-/* private constructure for TextureManager; loads the texture atlast texture, calls registerUVCoords() */
+/* private constructor for TextureManager; loads the texture atlas texture, calls registerUVCoords() */
 TextureManager::TextureManager() {
 	stbi_set_flip_vertically_on_load(true);
 	unsigned char* data = stbi_load(TEXTURE_ATLAS_PATH, &width, &height, &numChannels, 0);
